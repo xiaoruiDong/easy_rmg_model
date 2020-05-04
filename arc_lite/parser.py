@@ -94,3 +94,21 @@ def parse_species_in_arc_input(input_path: str) -> dict:
             spc_info[label] = {'label': label, 'ts': False}
     return spc_info
 
+
+def parse_charge_and_mult(path):
+    """
+    Parse the termination time from the output log file.
+    """
+    log = ess_factory(fullpath=path)
+
+    if isinstance(log, GaussianLog):
+        lines = _get_lines_from_file(path)
+        for line in lines[::]:
+            if 'charge' in line.lower() and 'multiplicity' in line.lower():
+                items = line.strip().split()
+                charge, mult = items[2], items[5]
+                return charge, mult
+        return
+    else:
+        raise NotImplementedError
+
