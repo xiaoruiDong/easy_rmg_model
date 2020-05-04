@@ -3,18 +3,14 @@
 
 import os.path
 
-from jinja2 import Environment, FileSystemLoader, Template
-
 from arc.species.converter import  (xyz_file_format_to_xyz,
                                     xyz_to_str)
 
+from easy_rmg_model.template_writer import BaseTemplateWriter
 
-class GaussianInput(object):
+class GaussianInput(BaseTemplateWriter):
     """
     A Input class used to create input file for quantum calculation using Gaussian.
-
-    Args:
-        spec (dict): 
     """
 
     default_settings = {
@@ -51,13 +47,6 @@ name
 
 
 """
-
-    def __init__(self, spec={}):
-        for key, value in spec.items():
-            setattr(self, key, value)
-        for key, value in self.default_settings.items():
-            if not hasattr(self, key):
-                setattr(self, key, value)
 
     @property
     def opt_args(self):
@@ -229,29 +218,6 @@ name
         # else:
         return '%chk=check.chk'
 
-    @property
-    def jinja2_template(self):
-        if self.template_file:
-            template_dir, template_file = os.path.split(self.template_path)
-            env = Environment(loader=FileSystemLoader(template_dir),
-                              autoescape=True)
-            template = env.get_template(template_file)
-        else:
-            template = Template(self.default_template, autoescape=True)
-        return template
-
-    @property
-    def rendered_template(self):
-        if not hasattr(self, '_rendered'):
-            if self.jinja2_template:
-                self._rendered = self.jinja2_template.render(self.to_dict())
-        return self._rendered
-
-    def save(self):
-        with open(self.save_path, 'w') as f:
-            f.write(self.rendered_template)
-        return True
-
     def to_dict(self):
         return {'checkfile_args': self.checkfile_args,
                 'memory_args': self.memory_args,
@@ -261,7 +227,3 @@ name
                 'multiplicity': self.multiplicity,
                 'geometry_args': self.geometry_args,
                 'redundant_ic_args': self.redundant_ic_args, }
-
-    @classmethod
-    def from_dict(cls, spec_dict):
-        return cls(spec_dict)

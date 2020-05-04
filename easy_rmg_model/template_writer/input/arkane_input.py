@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
-
 import json
-import os.path
-
-from jinja2 import Environment, FileSystemLoader, Template
 
 from arkane.encorr.corr import assign_frequency_scale_factor
 
+from easy_rmg_model.template_writer import BaseTemplateWriter
 
-class ArkaneInput(object):
+
+class ArkaneInput(BaseTemplateWriter):
 
     default_settings = {
         'model_chemistry': 'cbs-qb3',
@@ -73,13 +71,6 @@ rotors = [
 ]
 {%- endif %}
 """
-
-    def __init__(self, spec={}):
-        for key, value in spec.items():
-            setattr(self, key, value)
-        for key, value in self.default_settings.items():
-            if not hasattr(self, key):
-                setattr(self, key, value)
 
     @property
     def freq_scale_factor(self):
@@ -177,29 +168,6 @@ rotors = [
         else:
             raise ValueError(f'Not valid frequency, got {value}')
 
-    @property
-    def jinja2_template(self):
-        if self.template_file:
-            template_dir, template_file = os.path.split(self.template_path)
-            env = Environment(loader=FileSystemLoader(template_dir),
-                              autoescape=True)
-            template = env.get_template(template_file)
-        else:
-            template = Template(self.default_template, autoescape=True)
-        return template
-
-    @property
-    def rendered_template(self):
-        if not hasattr(self, '_rendered'):
-            if self.jinja2_template:
-                self._rendered = self.jinja2_template.render(self.to_dict())
-        return self._rendered
-
-    def save(self):
-        with open(self.save_path, 'w') as f:
-            f.write(self.rendered_template)
-        return True
-
     def to_dict(self):
         return {'model_chemistry': self. model_chemistry,
                 'freq_scale_factor': self.freq_scale_factor,
@@ -216,7 +184,3 @@ rotors = [
                 'freq': self.freq,
                 'save_path': self.save_path,
                 }
-
-    @classmethod
-    def from_dict(cls, spec_dict):
-        return cls(spec_dict)

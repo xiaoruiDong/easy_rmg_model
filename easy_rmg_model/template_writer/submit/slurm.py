@@ -3,11 +3,10 @@
 
 import os
 
-from jinja2 import Environment, FileSystemLoader, Template
-import pandas as pd
+from easy_rmg_model.template_writer import BaseTemplateWriter
 
 
-class SLURMSubmitScript(object):
+class SLURMSubmitScript(BaseTemplateWriter):
 
     default_settings = {
         'partition': '',
@@ -41,13 +40,6 @@ echo "============================================================"
 {{ content | safe }}
 """
 
-    def __init__(self, spec={}):
-        for key, value in spec.items():
-            setattr(self, key, value)
-        for key, value in self.default_settings.items():
-            if not hasattr(self, key):
-                setattr(self, key, value)
-
     @property
     def content(self):
         if not self._content:
@@ -61,29 +53,6 @@ echo "============================================================"
             raise ValueError(f'Invalid content ({value})')
         self._content = value
 
-    @property
-    def jinja2_template(self):
-        if self.template_file:
-            template_dir, template_file = os.path.split(self.template_path)
-            env = Environment(loader=FileSystemLoader(template_dir),
-                              autoescape=True)
-            template = env.get_template(template_file)
-        else:
-            template = Template(self.default_template, autoescape=True)
-        return template
-
-    @property
-    def rendered_template(self):
-        if not hasattr(self, '_rendered'):
-            if self.jinja2_template:
-                self._rendered = self.jinja2_template.render(self.to_dict())
-        return self._rendered
-
-    def save(self):
-        with open(self.save_path, 'w') as f:
-            f.write(self.rendered_template)
-        return True
-
     def to_dict(self):
         return {'partition': self.partition,
                 'job_name': self.job_name,
@@ -91,7 +60,3 @@ echo "============================================================"
                 'mem_per_cpu': self.mem_per_cpu,
                 'job_time': self.job_time,
                 'content': self.content}
-
-    @classmethod
-    def from_dict(cls, spec_dict):
-        return cls(spec_dict)

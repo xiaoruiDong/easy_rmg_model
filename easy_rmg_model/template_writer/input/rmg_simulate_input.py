@@ -3,13 +3,12 @@
 
 import os
 
-from jinja2 import Environment, FileSystemLoader, Template
-
 from rmgpy.chemkin import load_species_dictionary
 from rmgpy.molecule.molecule import Molecule
 
+from easy_rmg_model.template_writer import BaseTemplateWriter
 
-class RMGSimulateInput(object):
+class RMGSimulateInput(BaseTemplateWriter):
 
     default_settings = {
         "species_dictionary": "./species_dictionary.txt",
@@ -164,29 +163,6 @@ simulator(
                     f'Given label ({value["label"]}) and SMILES ({value["smiles"]}) are invalid.')
         return value
 
-    @property
-    def jinja2_template(self):
-        if self.template_file:
-            template_dir, template_file = os.path.split(self.template_path)
-            env = Environment(loader=FileSystemLoader(template_dir),
-                              autoescape=True)
-            template = env.get_template(template_file)
-        else:
-            template = Template(self.default_template, autoescape=True)
-        return template
-
-    @property
-    def rendered_template(self):
-        if not hasattr(self, '_rendered'):
-            if self.jinja2_template:
-                self._rendered = self.jinja2_template.render(self.to_dict())
-        return self._rendered
-
-    def save(self):
-        with open(self.save_path, 'w') as f:
-            f.write(self.rendered_template)
-        return True
-
     def to_dict(self):
         return {'fuel': self.fuel,
                 'sens_spc': self.sens_spc,
@@ -197,7 +173,3 @@ simulator(
                 'sensitivity': self.sensitivity,
                 'tf': self.tf,
                 }
-
-    @classmethod
-    def from_dict(cls, spec_dict):
-        return cls(spec_dict)

@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
-import os.path
 
-from jinja2 import Environment, FileSystemLoader, Template
+from easy_rmg_model.template_writer import BaseTemplateWriter
 
-
-class GaussianSubmit(object):
+class GaussianSubmit(BaseTemplateWriter):
 
     default_settings = {
         'package': 'g09',
-        'modules': ['c3ddb/gaussian/09.d01', ],
+        'modules': ['c3ddb/gaussian/09.d01',],
         'scratch_dir': '/scratch/users/xiaorui',
         'queue': 'slurm',
         'package_root': '/opt',
@@ -54,13 +52,6 @@ rm -rf $WorkDir
 
 """
 
-    def __init__(self, spec={}):
-        for key, value in spec.items():
-            setattr(self, key, value)
-        for key, value in self.default_settings.items():
-            if not hasattr(self, key):
-                setattr(self, key, value)
-
     @property
     def package(self):
         return self._package
@@ -88,29 +79,6 @@ rm -rf $WorkDir
         elif self.queue.lower() in ['sge', 'oge', 'pbs']:
             return gauss_scrdir + '$JOB_NAME -$JOB_ID'
 
-    @property
-    def jinja2_template(self):
-        if self.template_file:
-            template_dir, template_file = os.path.split(self.template_path)
-            env = Environment(loader=FileSystemLoader(template_dir),
-                              autoescape=True)
-            template = env.get_template(template_file)
-        else:
-            template = Template(self.default_template, autoescape=True)
-        return template
-
-    @property
-    def rendered_template(self):
-        if not hasattr(self, '_rendered'):
-            if self.jinja2_template:
-                self._rendered = self.jinja2_template.render(self.to_dict())
-        return self._rendered
-
-    def save(self):
-        with open(self.save_path, 'w') as f:
-            f.write(self.rendered_template)
-        return True
-
     def to_dict(self):
         return {'modules': self.modules,
                 'work_dir': self.work_dir,
@@ -120,7 +88,3 @@ rm -rf $WorkDir
                 'input': self.input,
                 'output': self.output,
                 'checkfile': self.checkfile, }
-
-    @classmethod
-    def from_dict(cls, spec_dict):
-        return cls(spec_dict)
