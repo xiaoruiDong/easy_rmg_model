@@ -49,3 +49,48 @@ def parse_termination_time(path):
         return None
     else:
         raise NotImplementedError
+
+
+def parse_species_in_arc_input(input_path: str) -> dict:
+    """
+    A function used to get species scope from the ARC input file.
+    """
+    spc_info = {}
+    try:
+        input_file = read_yaml_file(input_path)
+    except:
+        # Bad input path
+        return spc_info
+
+    if not 'species' in input_file:
+        # An input file without species information, weird!
+        return spc_info
+
+    for spc in input_file['species']:
+        label = spc['label']
+        if 'smiles' in spc:
+            try:
+                spc_info[label] = {'label': label,
+                                   'species': ARCSpecies(label=label,
+                                                         smiles=spc['smiles']),
+                                   'smi': spc['smiles'],
+                                   'ts': False}
+            except:
+                pass
+        elif 'xyz' in spc:
+            try:
+                mol = xyz_to_mol(spc['xyz'])
+            except:
+                pass
+            else:
+                smiles = mol.to_smiles()
+                spc_info[label] = {'label': label,
+                                   'species': ARCSpecies(label=label,
+                                                         smiles=smiles),
+                                   'smi': smiles,
+                                   'ts': False}
+        if label not in spc_info:
+            # Cannot get smiles or xyz
+            spc_info[label] = {'label': label, 'ts': False}
+    return spc_info
+
