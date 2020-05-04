@@ -9,7 +9,7 @@ from arkane.ess import ess_factory, GaussianLog
 
 from arc.common import read_yaml_file
 from arc.species.species import ARCSpecies
-from arc_lite.species.converter import xyz_to_mol
+from easy_rmg_model.species.converter import xyz_to_mol
 
 
 def _get_lines_from_file(path) -> list:

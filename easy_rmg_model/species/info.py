@@ -16,28 +16,28 @@ from arc.common import (determine_symmetry,
 
 from arc.job.trsh import (scan_quality_check,
                           trsh_scan_job)
-from arc_lite.job.trsh import determine_convergence
+from easy_rmg_model.job.trsh import determine_convergence
 
 from arc.parser import (parse_1d_scan_energies,
                         parse_scan_args,
                         parse_trajectory,
                         parse_xyz_from_file)
-from arc_lite.parser import (parse_charge_and_mult,
-                             parse_species_in_arc_input,
-                             parse_termination_time)
+from easy_rmg_model.parser import (parse_charge_and_mult,
+                                   parse_species_in_arc_input,
+                                   parse_termination_time)
 
 from arc.plotter import plot_1d_rotor_scan
 
 from arc.species.converter import (compare_confs,
                                    molecules_from_xyz,
                                    xyz_to_xyz_file_format)
-from arc_lite.species.converter import (xyz_to_mol,
-                                        xyz_to_rotors_dict,
-                                        xyz_to_xyz_file)
+from easy_rmg_model.species.converter import (xyz_to_mol,
+                                              xyz_to_rotors_dict,
+                                              xyz_to_xyz_file)
 
 from arc.species.species import ARCSpecies, determine_rotor_symmetry, enumerate_bonds
 
-from arc_lite.input import ArkaneInput, GaussianInput
+from easy_rmg_model.template_writer.input import ArkaneInput, GaussianInput
 
 from arkane.statmech import is_linear
 
@@ -369,23 +369,18 @@ def generate_arkane_input(spc,
 
 
 def generate_gaussian_input(spc, gaussian_spec, scan_spec=None):
-    if 'save_path' in gaussian_spec and gaussian_spec['save_path']:
-        save_dir, file_name = os.path.split(gaussian_spec['save_path'])
-    else:
+    if not ('save_path' in gaussian_spec and gaussian_spec['save_path']):
         save_dir, file_name = '', 'input.gjf'
 
     if gaussian_spec['job_type'] != 'scan':
         if not save_dir:
             gaussian_spec['save_path'] = os.path.join(spc['directory'],
-                                                      gaussian_spec['job_type'],
-                                                      file_name)
-        save_path = os.path.join(
-            save_dir, gaussian_spec['job_type'], 'input.gjf')
+                                                    gaussian_spec['job_type'],
+                                                    file_name)
         gaussian = GaussianInput({**spc, **gaussian_spec})
 
     elif not scan_spec or 'scan' not in scan_spec:
-        raise Exception(
-            'Need to assign scan_spec when dealing with scan jobs.')
+        raise Exception('Need to assign scan_spec when dealing with scan jobs.')
 
     else:
         if not save_dir:
@@ -453,9 +448,9 @@ def transfer_to_database(spc, database_path, output_file_name='output.out'):
         try:
             energies, angles = parse_1d_scan_energies(rotor['scan_path'])
             plot_1d_rotor_scan(angles=angles,
-                                energies=energies,
-                                path=os.path.dirname(rotor['scan_path']),
-                                scan=rotor['scan'])
+                               energies=energies,
+                               path=os.path.dirname(rotor['scan_path']),
+                               scan=rotor['scan'])
         except:
             pass
 
