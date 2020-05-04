@@ -112,3 +112,16 @@ def parse_charge_and_mult(path):
     else:
         raise NotImplementedError
 
+
+def parse_constrained_internal_coords(coords_str):
+    freeze = []
+    if isinstance(coords_str, str):
+        coords_str = coords_str.splitlines()
+    frz_pat = r'[DBA]?(\s+\d+){2,4}\s+F'
+    value_pat = r'[\d.]+'
+    for line in coords_str:
+        if re.search(frz_pat, line.strip()):
+            values = re.findall(value_pat, line)
+            freeze.append([int(values[i])
+                          for i in range(len(values))])
+    return freeze
