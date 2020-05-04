@@ -3,3 +3,4 @@
 
 
 from arc_lite.submit.gaussian_submit import GaussianSubmit
+from arc_lite.submit.slurm import SLURMSubmitScript
