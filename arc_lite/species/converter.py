@@ -40,3 +40,8 @@ def xyz_to_rotors_dict(xyz):
     except:
         return
 
+
+def xyz_to_xyz_file(spc, filename='xyz.txt'):
+    xyz = spc['geom']
+    with open(os.path.join(spc['directory'], filename), 'w') as f:
+        f.write(xyz_to_xyz_file_format(xyz))
