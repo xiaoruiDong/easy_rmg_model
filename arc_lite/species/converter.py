@@ -31,3 +31,12 @@ def xyz_to_mol(xyz):
     mol = Molecule()
     from_ob_mol(mol, molecule.OBMol)
     return mol
+
+
+def xyz_to_rotors_dict(xyz):
+    try:
+        mol = xyz_to_mol(xyz)
+        return find_internal_rotors(mol)
+    except:
+        return
+
