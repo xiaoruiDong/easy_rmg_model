@@ -3,3 +3,4 @@
 
 from arc_lite.input.gaussian_input import GaussianInput
 from arc_lite.input.arkane_input import ArkaneInput
+from arc_lite.input.rmg_simulate_input import RMGSimulateInput
