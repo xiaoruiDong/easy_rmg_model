@@ -1,1 +1,1 @@
-ARC_lite
+Easy RMG model
