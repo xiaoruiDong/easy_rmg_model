@@ -5,6 +5,7 @@ import argparse
 import datetime
 import itertools
 import os
+import shutil
 import subprocess
 import time
 
@@ -93,10 +94,13 @@ def generate_flux_diagram(input_path, chemkin_path, spc_dict_path, work_dir='.')
                                          cwd=work_dir,
                                          shell=True,
                                          timeout=DEFAULT_JOB_TIME_OUT)
-        return True
     except subprocess.CalledProcessError as e:
         print(f'Flux diagram failed. Got (e.output)')
         return
+    else:
+        # remove the species folder
+        shutil.rmtree(os.path.join(work_dir, 'species'))
+        return True
 
 
 def generate_rmg_input_file(spec):
