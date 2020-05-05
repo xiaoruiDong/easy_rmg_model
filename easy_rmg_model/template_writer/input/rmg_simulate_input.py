@@ -33,7 +33,7 @@ class RMGSimulateInput(BaseTemplateWriter):
 species(
     label='{{ fuel['label'] }}',
     reactive=True, 
-    structure=SMILES("{{ fuel['smiles'] }}"),
+    structure=SMILES("{{ fuel['smi'] }}"),
 )
 
 species(
@@ -52,7 +52,7 @@ species(
 species(
     label="{{ spc['label'] }}",
     reactive=True,
-    structure=SMILES("{{ spc['smiles'] }}"),
+    structure=SMILES("{{ spc['smi'] }}"),
 )
 {%- endfor %}
 
@@ -121,7 +121,7 @@ simulator(
 
     @property
     def oxygen_to_fuel(self):
-        mol = Molecule().from_smiles(self.fuel['smiles'])
+        mol = Molecule().from_smiles(self.fuel['smi'])
         atom_dict = mol.get_element_count()
         oxygen_to_fuel = 0
         for element, counts in atom_dict.items():
@@ -138,29 +138,29 @@ simulator(
         return [spc['label'] for spc in self.sens_spc]
 
     def update_spc_info(self, value):
-        if 'smiles' in value and 'label' not in value:
-            mol = Molecule().from_smiles(value['smiles'])
+        if 'smi' in value and 'label' not in value:
+            mol = Molecule().from_smiles(value['smi'])
             for label, spc in self.spc_dict.items():
                 if spc.is_isomorphic(mol):
                     value['label'] = label
                     break
             else:
-                raise ValueError(f'Given SMILES ({value["smiles"]}) invalid.')
-        elif 'smiles' not in value and 'label' in value:
+                raise ValueError(f'Given SMILES ({value["smi"]}) invalid.')
+        elif 'smi' not in value and 'label' in value:
             for label, spc in self.spc_dict.items():
                 if label == value['label']:
-                    value['smiles'] = spc.molecules[0].to_smiles()
+                    value['smi'] = spc.molecules[0].to_smiles()
                     break
             else:
                 raise ValueError(f'Given label ({value["label"]}) invalid.')
-        elif 'smiles' in value and 'label' in value:
-            mol = Molecule().from_smiles(value['smiles'])
+        elif 'smi' in value and 'label' in value:
+            mol = Molecule().from_smiles(value['smi'])
             for label, spc in self.spc_dict.items():
                 if label == value['label'] and spc.is_isomorphic(mol):
                     break
             else:
                 raise ValueError(
-                    f'Given label ({value["label"]}) and SMILES ({value["smiles"]}) are invalid.')
+                    f'Given label ({value["label"]}) and SMILES ({value["smi"]}) are invalid.')
         return value
 
     def to_dict(self):
