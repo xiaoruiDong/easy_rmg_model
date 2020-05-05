@@ -8,33 +8,55 @@ import os
 import pydot
 
 
-def get_spc_label_from_fluxdiagrams(result_folder):
+def find_flux_diagrams(path, avoid_repeats=True):
+    """
+    Find all of the flux diagrams in the given directory. Flux diagrams under 
+    the same folder have the same species if generated from RMG or RMS.
+
+    Args:
+        path (str): The path from where to find flux diagrams based on '.dot file
+        avoid_repeats (bool): Whether to avoid the repeats. 
+
+    Returns:
+        list: A list of paths to flux diagram dot files.
+    """
+    if not os.path.isdir(path):
+        raise ValueError(f'Not a invalid path ({path}), need to be a dir path.')
+
+    flux_diagrams=[]
+    for root, _, files in os.walk(path):
+        for file in files:
+            if file.endswith('.dot'):
+                if avoid_repeats:
+                    # Flux diagrams under the same folder have the same species
+                    flux_diagrams.append(os.path.join(root, file))
+                    break
+                else:
+                    flux_diagrams.append(os.path.join(root, file))
+    return flux_diagrams
+
+
+def get_spc_info_from_flux_diagrams(files):
     """
     Get the list of species contained in multiple flux diagrams
 
     Args:
-        result_folder (str): The path to a folder which contains the flux diagram result
+        files (list): A list of files from which read species info
 
     Return:
-        spc_list (list): A list of species
+        spc_info (list): A list of species info contains species label
     """
-    # Find the dot file
-    flux_diagrams = []
-    for root, _, files in os.walk(result_folder):
-        for file in files:
-            if file.endswith('.dot'):
-                # Flux diagrams under the same folder have the same species
-                flux_diagrams.append(os.path.join(root, file))
-                break
-
-    # Get non duplicate labels from flux diagrams
+    # Get all species label
     label_list = list()
-    for fd in flux_diagrams:
+    for fd in files:
         label_list += get_spc_label_from_fluxdiagram(fd)
-    return list(set(label_list))
+    # Get non duplicate labels from flux diagrams
+    label_list = list(set(label_list))
+    # Return the format of species info
+    return {label: {'label': label} for label in label_list}
 
 
-def get_spc_label_from_fluxdiagram(file_path):
+def get_spc_label_from_fluxdiagram(path):
     """
     Given the flux diagram in dot file, the species labels
     on the flux diagram will be extracted and output as a list
@@ -46,7 +68,7 @@ def get_spc_label_from_fluxdiagram(file_path):
         label_list (list): A list which contains species labels
     """
     # Read the .dot file to graph
-    graph = pydot.graph_from_dot_file(file_path)
+    graph = pydot.graph_from_dot_file(path)
     # Extract the node list
     node_list = graph[0].get_node_list()
     # Read the name of each node which is the species label
