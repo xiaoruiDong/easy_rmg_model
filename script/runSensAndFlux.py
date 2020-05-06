@@ -13,9 +13,10 @@ import pandas as pd
 from rmgpy.molecule.molecule import Molecule
 from rmgpy.chemkin import load_species_dictionary
 
+from easy_rmg_model.common import regularize_path
+from easy_rmg_model.settings import RMG_PATH
 from easy_rmg_model.template_writer.input import RMGSimulateInput
 from easy_rmg_model.template_writer.submit import SLURMSubmitScript
-from easy_rmg_model.settings import RMG_PATH
 
 
 DEFAULT_TS = [700, 800, 900, 1000, 1200, 1400, 1600, 2000]  # in Kelvin
@@ -41,7 +42,7 @@ def parse_arguments():
 
     args = parser.parse_args()
 
-    model_path = os.path.abspath(args.model_path[0])
+    model_path = regularize_path(args.model_path[0])
     fuel = args.fuel[0]
     Ts = [float(T) for T in args.temperature] if args.temperature else DEFAULT_TS
     Ps = [float(P) for P in args.pressure] if args.pressure else DEFAULT_PS
@@ -50,7 +51,8 @@ def parse_arguments():
     outputs = {}
     for job_type in ['simulate', 'sensitivity', 'flux_diagram']:
         job_path = getattr(args, f'{job_type}_path')
-        outputs[job_type] = job_path[0] if job_path else os.path.join(os.path.dirname(model_path), job_type)
+        outputs[job_type] = regularize_path(job_path[0]) if job_path else \
+                            os.path.join(os.path.dirname(model_path), job_type)
 
     return model_path, fuel, Ts, Ps, phis, tf, outputs
 
