@@ -59,14 +59,14 @@ def parse_arguments():
 def find_molecule(molecule, spc_dict):
     # Find the molecule according to the smiles or the label information
     if molecule in spc_dict:
-        return {'label': molecule, 'smi': spc_dict[molecule].molecules[0].to_smiles()}
+        return {'label': molecule, 'smi': spc_dict[molecule].molecule[0].to_smiles()}
     try:
         mol = Molecule().from_smiles(molecule)
     except:
         raise ValueError(f'Invalid molecule input {molecule} should be a SMILES string or the species label')
     for label, spc in spc_dict.items():
         if spc.is_isomorphic(mol):
-            return {'label': 'label', 'smi': spc.molecules[0].to_smiles()}
+            return {'label': 'label', 'smi': spc.molecule[0].to_smiles()}
 
 
 def run_simulation(input_path, chemkin_path, spc_dict_path, work_dir='.'):
