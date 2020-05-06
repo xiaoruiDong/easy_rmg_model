@@ -31,6 +31,8 @@ CHECK_POOLING_JOB = 2 * 60  # 2 min
 def parse_arguments():
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('model_path', metavar='MODELPATH', type=str, nargs=1,
+                        help='The folder path to RMG model')
     parser.add_argument('sensitivity_path', nargs=1, help='Path to save sensitivity results')
 
     args = parser.parse_args()
@@ -38,9 +40,9 @@ def parse_arguments():
     model_path = regularize_path(args.model_path[0])
     sens_path = regularize_path(args.sensitivity_path[0])
 
-    return sens_path
+    return model_path, sens_path
 
-    
+
 def pooling_jobs(pool):
 
     org_len = len(pool)
@@ -66,13 +68,14 @@ def main():
 
     model_path, sens_path = parse_arguments()
 
+    print(f'Using RMG model from {model_path}...')
     chemkin_path = os.path.join(model_path, 'chem_annotated.inp')
     spc_dict_path = os.path.join(model_path, 'species_dictionary.txt')
-    
+
     # File structure in sens_path
     # /condition/[input, submit_script.sh]
     jobs = os.listdir(sens_path)
-    
+
     job_pool = []
     for job in jobs:
         if os.path.isdir(job):
@@ -87,7 +90,7 @@ def main():
             submit_script_path = os.path.join(work_dir, 'submit_script.sh')
             if not os.path.isfile(submit_script_path):
                 content = f"""conda activate rmg_env
-python "{RMG_PATH}/scripts/simulate.py" "{input_path}" "{chemkin_path}" "{spc_dict_path}"    
+python "{RMG_PATH}/scripts/simulate.py" "{input_path}" "{chemkin_path}" "{spc_dict_path}"
 conda deactivate
 """
                 spec = {
