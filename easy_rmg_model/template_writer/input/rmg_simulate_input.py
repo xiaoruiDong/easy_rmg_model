@@ -116,8 +116,8 @@ simulator(
     @sens_spc.setter
     def sens_spc(self, value):
         self._sens_spc = []
-        for spc_dict in value:
-            self._sens_spc.append(self.update_spc_info(spc_dict))
+        for spc_info in value:
+            self._sens_spc.append(self.update_spc_info(spc_info))
 
     @property
     def oxygen_to_fuel(self):
