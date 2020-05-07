@@ -1,10 +1,10 @@
 # Easy RMG Model
 
-This depository is to provide some useful tools developed during Xiaorui's pursuing his PhD degree on Chemical Engineering (combustion chemistry). The majority of the scripts are based on the [RMG](https://github.com/ReactionMechanismGenerator/RMG-Py) and [ARC](https://github.com/ReactionMechanismGenerator/ARC) package developed by [Green group, MIT](http://greengroup.mit.edu/)
+This depository is to provide some useful tools developed during Xiaorui's pursuing his PhD degree on Chemical Engineering (combustion chemistry). The majority of the scripts are based on the [RMG](https://github.com/ReactionMechanismGenerator/RMG-Py) and [ARC](https://github.com/ReactionMechanismGenerator/ARC) package developed by [Green group, MIT](http://greengroup.mit.edu/).
 
 ## Setup
 
-To set up this depository, you need to add this package into your PYTHONPATH. For example, if the depository is cloned to your home directory `~/easy_rmg_model`, please append `export PYTHONPATH=$PYTHONPATH:~/easy_rmg_model`.
+To set up this depository, you need to install [ARC environment](https://github.com/ReactionMechanismGenerator/ARC/blob/master/environment.yml) by `Anaconda` or `Miniconda`. Besides, you also need to add this package into your PYTHONPATH. For example, if the depository is cloned to your home directory `~/easy_rmg_model`, please append `export PYTHONPATH=$PYTHONPATH:~/easy_rmg_model`.
 
 ## Licence
 
