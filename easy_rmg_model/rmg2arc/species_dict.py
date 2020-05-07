@@ -23,14 +23,15 @@ def load_spc_dict(spc_dict: Union[dict, str]) -> dict:
     if isinstance(spc_dict, dict):
         return spc_dict
     elif isinstance(spc_dict, str) and os.path.isfile(spc_dict):
-        spc_dict = load_species_dictionary(spc_dict)
+        return load_species_dictionary(spc_dict)
     else:
         raise ValueError(f'Invalid species dictionary {spc_dict}')
 
 
 def expand_spc_info_by_spc_dict(spc_info: dict,
                                 spc_dict: Union[str, dict],
-                                spc_aliases: Optional[dict]):
+                                spc_aliases: Optional[dict] = None,
+                                ) -> dict:
     """
     Expand the given spc_info ``dict`` by using species dictionary. The updates are
     based on the label information.
@@ -59,11 +60,12 @@ def expand_spc_info_by_spc_dict(spc_info: dict,
             try:
                 smiles = rmg_spc.molecule[0].to_smiles()
                 charge = rmg_spc.molecule[0].get_net_charge()
-                adjlist = rmg_spc.to_adjacency_list()
+                adjlist = rmg_spc.molecule[0].to_adjacency_list()
             except:
                 print(f'Warning: Cannot generate geom info for the species {label}.')
             else:
                 spc.update({'smiles': smiles,
-                            'adjlist': adjlist, 'multiplicity': spc.multiplicity,
+                            'adjlist': adjlist,
+                            'multiplicity': rmg_spc.multiplicity,
                             'charge': charge, })
-    return spc_dict
+    return spc_info
