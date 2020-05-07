@@ -68,7 +68,7 @@ def save_yaml_file(path: str,
         os.makedirs(dirname)
 
     # Make sure the suffix is correct
-    if filename.endswith('.yml') or not filename.endswith('.yaml'):
+    if filename.endswith('.yml') or filename.endswith('.yaml'):
         suffix = '.' + filename.split('.')[-1]
         filename = filename.replace(suffix, '')
     else:
@@ -76,10 +76,13 @@ def save_yaml_file(path: str,
 
     # Overwrite handling
     if not overwrite:
-        for index in [''] + [f' ({i})' for i in range(1000000000)]:
+        i = 0
+        while i < 100000:
+            index = '' if not i else f' ({i})'
             new_path = os.path.join(dirname, f'{filename}{index}{suffix}')
             if not os.path.isfile(new_path):
                 break
+            i += 1
     else:
         new_path = os.path.join(dirname, f'{filename}{suffix}')
 
