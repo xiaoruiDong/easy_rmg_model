@@ -6,6 +6,7 @@ The toolbox for sensitivity analysis related tasks
 
 
 import os
+from typing import Union
 
 import pandas as pd
 
@@ -28,7 +29,7 @@ def find_sensitivity_results(path: str) -> list:
         raise ValueError(
             f'Not a invalid path ({path}), need to be a dir path.')
 
-    sensitivities = get_files_by_regex(r"^sensitivity.+\.csv$")
+    sensitivities = get_files_by_regex(path, r"^sensitivity.+\.csv$")
     return sensitivities
 
 
@@ -76,7 +77,7 @@ def get_spc_info_from_sensitivities(files: Union[str, list],
 
     label_list = []
     for sa_file in files:
-        label_list.append(get_spc_label_from_sensitivity(sa_file, N))
+        label_list += get_spc_label_from_sensitivity(sa_file, N)
 
     # remove duplicates
     label_list = list(set(label_list))
