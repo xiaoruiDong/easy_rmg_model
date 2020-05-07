@@ -73,7 +73,7 @@ def parse_species_in_arc_input(input_path: str) -> dict:
                 spc_info[label] = {'label': label,
                                    'species': ARCSpecies(label=label,
                                                          smiles=spc['smiles']),
-                                   'smi': spc['smiles'],
+                                   'smiles': spc['smiles'],
                                    'ts': False}
             except:
                 pass
@@ -87,7 +87,7 @@ def parse_species_in_arc_input(input_path: str) -> dict:
                 spc_info[label] = {'label': label,
                                    'species': ARCSpecies(label=label,
                                                          smiles=smiles),
-                                   'smi': smiles,
+                                   'smiles': smiles,
                                    'ts': False}
         if label not in spc_info:
             # Cannot get smiles or xyz

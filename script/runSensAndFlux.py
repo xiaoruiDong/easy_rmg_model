@@ -72,7 +72,7 @@ def parse_arguments():
 def find_molecule(molecule, spc_dict):
     # Find the molecule according to the smiles or the label information
     if molecule in spc_dict:
-        return {'label': molecule, 'smi': spc_dict[molecule].molecule[0].to_smiles()}
+        return {'label': molecule, 'smiles': spc_dict[molecule].molecule[0].to_smiles()}
     try:
         mol = Molecule().from_smiles(molecule)
     except:
@@ -80,7 +80,7 @@ def find_molecule(molecule, spc_dict):
             f'Invalid molecule input {molecule} should be a SMILES string or the species label')
     for label, spc in spc_dict.items():
         if spc.is_isomorphic(mol):
-            return {'label': label, 'smi': spc.molecule[0].to_smiles()}
+            return {'label': label, 'smiles': spc.molecule[0].to_smiles()}
 
 
 def run_simulation(input_path, chemkin_path, spc_dict_path, work_dir='.'):
@@ -212,9 +212,9 @@ def main():
         work_dir = os.path.join(outputs['sensitivity'], folder_name,)
         os.makedirs(work_dir, exist_ok=True)
         input_path = os.path.join(work_dir, 'input.py')
-        sens_spc = [{'smi': '[OH]', },
-                    {'smi': '[H]', },
-                    {'smi': 'O[O]', }, ]
+        sens_spc = [{'smiles': '[OH]', },
+                    {'smiles': '[H]', },
+                    {'smiles': 'O[O]', }, ]
         spec.update({'sens_spc': sens_spc,
                      'tf': idt})
         generate_rmg_input_file(spec, save_path=input_path)

@@ -33,7 +33,7 @@ class RMGSimulateInput(BaseTemplateWriter):
 species(
     label='{{ fuel['label'] }}',
     reactive=True, 
-    structure=SMILES("{{ fuel['smi'] }}"),
+    structure=SMILES("{{ fuel['smiles'] }}"),
 )
 
 species(
@@ -52,7 +52,7 @@ species(
 species(
     label="{{ spc['label'] }}",
     reactive=True,
-    structure=SMILES("{{ spc['smi'] }}"),
+    structure=SMILES("{{ spc['smiles'] }}"),
 )
 {%- endfor %}
 
@@ -121,7 +121,7 @@ simulator(
 
     @property
     def oxygen_to_fuel(self):
-        mol = Molecule().from_smiles(self.fuel['smi'])
+        mol = Molecule().from_smiles(self.fuel['smiles'])
         atom_dict = mol.get_element_count()
         oxygen_to_fuel = 0
         for element, counts in atom_dict.items():
@@ -138,23 +138,23 @@ simulator(
         return [spc['label'] for spc in self.sens_spc]
 
     def update_spc_info(self, value):
-        if 'smi' in value and 'label' not in value:
-            mol = Molecule().from_smiles(value['smi'])
+        if 'smiles' in value and 'label' not in value:
+            mol = Molecule().from_smiles(value['smiles'])
             for label, spc in self.spc_dict.items():
                 if spc.is_isomorphic(mol):
                     value['label'] = label
                     break
             else:
                 raise ValueError(f'Given SMILES ({value["smi"]}) invalid.')
-        elif 'smi' not in value and 'label' in value:
+        elif 'smiles' not in value and 'label' in value:
             for label, spc in self.spc_dict.items():
                 if label == value['label']:
-                    value['smi'] = spc.molecules[0].to_smiles()
+                    value['smiles'] = spc.molecules[0].to_smiles()
                     break
             else:
                 raise ValueError(f'Given label ({value["label"]}) invalid.')
-        elif 'smi' in value and 'label' in value:
-            mol = Molecule().from_smiles(value['smi'])
+        elif 'smiles' in value and 'label' in value:
+            mol = Molecule().from_smiles(value['smiles'])
             for label, spc in self.spc_dict.items():
                 if label == value['label'] and spc.is_isomorphic(mol):
                     break

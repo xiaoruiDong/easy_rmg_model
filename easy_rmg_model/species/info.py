@@ -151,14 +151,15 @@ def check_converge_and_geom_consist(spc,
     spc['checkfile'] = ''
     spc['charge'], spc['multiplicity'] = parse_charge_and_mult(spc[basis_job])
     try:
-        spc['smi'] = xyz_to_mol(spc['geom']).to_smiles()
+        spc['smiles'] = xyz_to_mol(spc['geom']).to_smiles()
     except:
         try:
-            spc['smi'] = molecules_from_xyz(spc['geom'],
+            spc['smiles'] = molecules_from_xyz(spc['geom'],
                                             spc['multiplicity'],
                                             spc['charge'])[0].to_smiles()
         except:
-            spc['smi'] = ''
+            spc['smiles'] = ''
+            logging.warning(f"Cannot generate SMILES for {spc['label']}")
 
     # Assume checkfile is located under the same dir and named check.chk
     check_path = os.path.join(os.path.dirname(spc[basis_job]), 'check.chk')
@@ -339,7 +340,7 @@ def generate_geom_info(spc, xyz_file=None):
     except:
         return
 
-    spc['smi'] = mol.to_smiles()
+    spc['smiles'] = mol.to_smiles()
     spc['mol'] = mol.to_adjacency_list()
     spc['bond_dict'] = enumerate_bonds(mol)
     spc['atom_dict'] = mol.get_element_count()
@@ -423,11 +424,11 @@ def transfer_species_jobs(spc, new_dir, output_file_name='output.out'):
 def transfer_to_database(spc, database_path, output_file_name='output.out'):
 
     # Create a new folder to store
-    if 'smi' not in spc:
-        spc['smi'] = xyz_to_mol(spc['geom']).to_smiles()
+    if 'smiles' not in spc:
+        spc['smiles'] = xyz_to_mol(spc['geom']).to_smiles()
 
     for i in range(100):
-        new_dir = os.path.join(database_path, spc['smi'], str(i))
+        new_dir = os.path.join(database_path, spc['smiles'], str(i))
         try:
             os.makedirs(new_dir, exist_ok=False)
         except:
