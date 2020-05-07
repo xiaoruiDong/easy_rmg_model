@@ -32,7 +32,7 @@ class RMGSimulateInput(BaseTemplateWriter):
 
 species(
     label='{{ fuel['label'] }}',
-    reactive=True, 
+    reactive=True,
     structure=SMILES("{{ fuel['smiles'] }}"),
 )
 

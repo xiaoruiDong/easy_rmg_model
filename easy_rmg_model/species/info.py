@@ -86,7 +86,7 @@ def find_all_species_in_arc_project(project_path):
 def classify_jobs(spc,
                   job_types=['composite', 'scan', 'freq'],
                   output_file_name='output.out'):
-    """ 
+    """
     A function used to classify all of the jobs under the species calculation
     directory by the output files defined by ``output_file_name``. The classification
     is naively done by assuming we use job type name in the path, e.g., 'scan_a1'.
@@ -140,7 +140,7 @@ def check_converge_and_geom_consist(spc,
             pass
         else:
             if 'species' in spc \
-               and not spc['species'].check_xyz_isomorphism(xyz=basis_xyz):
+                    and not spc['species'].check_xyz_isomorphism(xyz=basis_xyz):
                 basis_xyz = None
 
     if not basis_xyz:
@@ -223,7 +223,7 @@ def filter_scans(spc, scan_filter='latest'):
             else:
                 if not compare_confs(init_xyz, spc['geom']):
                     continue
-        
+
         # Parse the scan arguments
         try:
             scan_args = parse_scan_args(scan_path)
@@ -237,7 +237,7 @@ def filter_scans(spc, scan_filter='latest'):
                 if scan_filter == 'non-frozen' and scan_args['freeze']:
                     # filter out constraint scans
                     rotor['archived'].append(scan_path)
-                    
+
                 elif scan_filter == 'latest' and rotor['scan_path']:
                     # filter out non latest scans
                     time_1 = parse_termination_time(scan_path)
@@ -402,7 +402,7 @@ def transfer_species_jobs(spc, new_dir, output_file_name='output.out'):
                     new_dir, job_type, output_file_name))
                 spc[job_type] = os.path.join(
                     new_dir, job_type, output_file_name)
-    
+
     for rotor in spc['rotors_dict'].values():
         new_rotor_dir = os.path.join(new_dir, f'scan_{str(rotor["scan"])}')
         os.makedirs(new_rotor_dir, exist_ok=True)
@@ -435,12 +435,12 @@ def transfer_to_database(spc, database_path, output_file_name='output.out'):
             continue
         else:
             break
-    
+
     # make sure it is the updated summary
     generate_summary(spc)
     with open(os.path.join(new_dir, 'info.txt'), 'w') as info:
         info.write(spc['summary'])
-    
+
     transfer_species_jobs(spc, new_dir, output_file_name)
 
     spc['directory'] = new_dir
