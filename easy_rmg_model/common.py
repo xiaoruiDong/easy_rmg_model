@@ -3,6 +3,8 @@
 
 import os
 import re
+import yaml
+from typing import Union
 
 
 
@@ -38,3 +40,59 @@ def get_files_by_regex(path: str, regex: str) -> list:
             if re.search(regex, file_name):
                 file_list.append(os.path.join(root, file_name))
     return file_list
+
+
+def save_yaml_file(path: str,
+                   content: Union[str, dict], overwrite: bool = True):
+    """
+    Save yaml files with options for overwriting.
+
+    Args:
+        path (str): The directory which contains files to be found
+        regex (regex): The regular expression of the search
+
+    Return:
+        file_list (list): A list of file paths
+    """
+    if not isinstance(path, str):
+        raise ValueError(f'Invalid path ({path}) due to wrong type ({type(path)})')
+
+    yaml.add_representer(str, string_representer)
+    content = yaml.dump(data=content)
+
+    dirname = os.path.dirname(path)
+    filename = os.path.basename(path)
+
+    # Make sure the dir is exists
+    if dirname and not os.path.exists(dirname):
+        os.makedirs(dirname)
+
+    # Make sure the suffix is correct
+    if filename.endswith('.yml') or not filename.endswith('.yaml'):
+        suffix = '.' + filename.split('.')[-1]
+        filename = filename.replace(suffix, '')
+    else:
+        suffix = '.yml'
+
+    # Overwrite handling
+    if not overwrite:
+        for index in [''] + [f' ({i})' for i in range(1000000000)]:
+            new_path = os.path.join(dirname, f'{filename}{index}{suffix}')
+            if not os.path.isfile(new_path):
+                break
+    else:
+        new_path = os.path.join(dirname, f'{filename}{suffix}')
+
+    with open(new_path, 'w') as f:
+        f.write(content)
+
+    return True
+
+
+def string_representer(dumper, data):
+    """
+    Add a custom string representer to use block literals for multiline strings.
+    """
+    if len(data.splitlines()) > 1:
+        return dumper.represent_scalar(tag='tag:yaml.org,2002:str', value=data, style='|')
+    return dumper.represent_scalar(tag='tag:yaml.org,2002:str', value=data)
