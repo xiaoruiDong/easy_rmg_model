@@ -41,3 +41,17 @@ def load_thermo_lib_by_path(path: str,
     else:
         print(f'The library {path} has already been loaded')
 
+
+def load_thermo_database(libraries: Optional[list] = None):
+    """
+    A helper function to load thermo database given libraries used
+
+    Args:
+        libraries (Optional[list]): A list of libraries to be imported. All
+                                    libraies will be imported if not assigned.
+    """
+    thermo_db_path = os.path.join(rmg_settings['database.directory'],
+                                  'input', 'thermo')
+    thermo_db = ThermoDatabase()
+    thermo_db.load(thermo_db_path, libraries=libraries)
+    return thermo_db
