@@ -139,6 +139,32 @@ def find_species_from_spc_dict(spc: Union[dict, Species, Molecule],
     return None, None
 
 
+def species_from_spc_info(spc: dict,
+                          resonance: bool = True,
+                          ) -> Optional[Species]:
+    """
+    Generate a RMG Species from species info.
+
+    Args:
+        spc (dict): A single species info contains the species geom info.
+        resonance (bool): Whether generate resonance geom in the species dictionary.
+
+    Returns:
+        Species: The Species instance from spc.
+    """
+    label = spc['label']
+    if 'adjlist' in spc:
+        return Species(label=label).from_adjacency_list(spc['adjlist'])
+    elif 'smiles' in spc:
+        return Species(label=label).from_smiles(spc['smiles'])
+    elif 'xyz' in spc:
+        species = Species(label=label)
+        species.set_structure(xyz_to_mol(spc['xyz']).to_smiles())
+        return species
+    # else: return None
+    # TODO: Add warning
+
+
 def spc_dict_from_spc_info(spc_info: dict, resonance: bool = True) -> dict:
     """
     Generate a species dictionary from species info.
