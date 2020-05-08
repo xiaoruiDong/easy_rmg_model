@@ -11,6 +11,33 @@ from easy_rmg_model.rmg2arc.species_dict import (expand_spc_info_by_spc_dict,
                                                  spc_dict_from_spc_info)
 
 
+def combine_spc_infos(*spc_infos: Union[list, tuple],
+                      resonance: bool = True
+                      ) -> list:
+    """
+    Combine species lists used in ARC input files
+
+    Args:
+        spc_infos (list): Many pieces of species info.
+        resonance (bool): Generate resonance structures when checking isomorphism.
+
+    Returns:
+        dict: A species info combined from each pieces
+    """
+    base_spc_info = spc_infos[0]
+    if len(spc_infos) == 1:
+        raise ValueError('Only one species info is provided.')
+    spc_dict = spc_dict_from_spc_info(base_spc_info, resonance=resonance)
+    base_spc_info = expand_spc_info_by_spc_dict(base_spc_info, spc_dict)
+
+    # Compare each spc_list to base list
+    for spc_info in spc_infos[1:]:
+        base_spc_info = combine_spc_info(base_spc_info,
+                                         spc_info,
+                                         spc_dict)
+    return base_spc_info
+
+
 def combine_spc_info(spc_info1: dict,
                      spc_info2: dict,
                      spc_dict: Optional[dict] = None,
