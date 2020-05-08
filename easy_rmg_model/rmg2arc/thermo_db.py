@@ -5,6 +5,7 @@ The toolbox for works related to RMG thermo database
 """
 
 import os
+from typing import Optional
 
 from rmgpy import settings as rmg_settings
 from rmgpy.data.thermo import ThermoDatabase, ThermoLibrary
@@ -50,8 +51,7 @@ def load_thermo_database(libraries: Optional[list] = None):
         libraries (Optional[list]): A list of libraries to be imported. All
                                     libraies will be imported if not assigned.
     """
-    thermo_db_path = os.path.join(rmg_settings['database.directory'],
-                                  'input', 'thermo')
+    thermo_db_path = os.path.join(rmg_settings['database.directory'], 'thermo')
     thermo_db = ThermoDatabase()
     thermo_db.load(thermo_db_path, libraries=libraries)
     return thermo_db
