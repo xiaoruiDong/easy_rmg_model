@@ -67,13 +67,13 @@ def expand_spc_info_by_spc_dict(spc_info: dict,
                     continue
                 try:
                     if attribute == 'smiles':
-                        geom_info[attribute] = molecule.to_smiles()
+                        spc[attribute] = molecule.to_smiles()
                     elif attribute == 'charge':
-                        geom_info[attribute] = molecule.get_net_charge()
+                        spc[attribute] = molecule.get_net_charge()
                     elif attribute == 'multiplicity':
-                        geom_info[attribute] = molecule.get_net_charge()
+                        spc[attribute] = molecule.get_net_charge()
                     else:
-                        geom_info[attribute] = molecule.to_adjacency_list()
+                        spc[attribute] = molecule.to_adjacency_list()
                 except:
                     print(f'Warning: Cannot generate {attribute} for the species {label}.')
     return spc_info
