@@ -172,21 +172,16 @@ def spc_dict_from_spc_info(spc_info: dict, resonance: bool = True) -> dict:
     Args:
         spc_info (dict): Species info contains the label and species geom info.
         resonance (bool): Whether generate resonance geom in the species dictionary.
+
     Returns:
-        dict : The species dictionary generated from the spc_info.
+        dict: The species dictionary generated from the spc_info.
     """
     spc_dict = {}
     for label, spc in spc_info.items():
-        if 'adjlist' in spc:
-            spc_dict[label] = Species(label=label).from_adjacency_list(spc['adjlist'])
-        elif 'smiles' in spc:
-            spc_dict[label] = Species(label=label).from_smiles(spc['smiles'])
-        elif 'xyz' in spc:
-            spc_dict[label] = Species(label=label)
-            spc_dict[label].set_structure(xyz_to_mol(spc['xyz']).to_smiles())
-        else:
-            # TODO: Add warning
+        species = species_from_spc_info(spc)
+        if not species:
             continue
         if resonance:
-            spc_dict[label].generate_resonance_structures()
+            species.generate_resonance_structures()
+        spc_dict[label] = species
     return spc_dict
