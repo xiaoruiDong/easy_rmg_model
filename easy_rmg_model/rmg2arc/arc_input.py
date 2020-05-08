@@ -148,12 +148,15 @@ def combine_arc_species_inputs(*inputs: Union[list, tuple],
             arc_inputs.append(input_file)
 
     spc_infos = []
-    for input_file in arc_inputs:
+    for index, input_file in enumerate(arc_inputs):
         if not 'species' in input_file:
             raise ValueError('Invalid Input file which does not have species sections.')
+        print(f'No.{index} input contains {len(input_file["species"])} species')
         spc_infos.append({spc['label']: spc for spc in input_file['species']})
 
     combined_spc_info = combine_spc_infos(*spc_infos, resonance=resonance)
+
+    print(f'The combined input contains {len(combined_spc_info)} species')
 
     # Generate ARC input
     arc_input = {'species': []}

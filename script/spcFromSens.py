@@ -70,8 +70,8 @@ def main():
 
     if not output:
         output = os.path.join(model_path, 'input_sens.yml')
-    save_yaml_file(output, arc_input, overwrite=False)
-
+    actual_output_path = save_yaml_file(output, arc_input, overwrite=False)
+    print(f'Saved to {actual_output_path}.')
 
 if __name__ == '__main__':
     main()
