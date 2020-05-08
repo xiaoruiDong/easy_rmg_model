@@ -53,17 +53,26 @@ def expand_spc_info_by_spc_dict(spc_info: dict,
         if spc_aliases:
             label = spc_aliases[label]
         try:
-            rmg_spc = spc_dict[label]
+            molecule = spc_dict[label].molecule[0]
         except KeyError:
             print(f'Warning: Cannot find the species {spc["label"]} in species dictionary.')
         else:
-            try:
-                smiles = rmg_spc.molecule[0].to_smiles()
-                charge = rmg_spc.molecule[0].get_net_charge()
-                adjlist = rmg_spc.molecule[0].to_adjacency_list()
-            except:
-                print(f'Warning: Cannot generate geom info for the species {label}.')
-            else:
+            for attribute in ['smiles', 'charge', 'multiplicity', 'adjlist']:
+                if attribute in spc:
+                    continue
+                try:
+                    if attribute == 'smiles':
+                        geom_info[attribute] = molecule.to_smiles()
+                    elif attribute == 'charge':
+                        geom_info[attribute] = molecule.get_net_charge()
+                    elif attribute == 'multiplicity':
+                        geom_info[attribute] = molecule.get_net_charge()
+                    else:
+                        geom_info[attribute] = molecule.to_adjacency_list()
+                except:
+                    print(f'Warning: Cannot generate {attribute} for the species {label}.')
+    return spc_info
+
                 spc.update({'smiles': smiles,
                             'adjlist': adjlist,
                             'multiplicity': rmg_spc.multiplicity,
