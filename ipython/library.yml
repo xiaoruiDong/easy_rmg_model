@@ -1,0 +1,11 @@
+built-in_libs:
+  - primaryThermoLibrary
+  - Klippenstein_Glarborg2016
+  - thermo_DFT_CCSDTF12_BAC
+  - BurkeH2O2
+  - DFT_QCI_thermo
+  - Narayanaswamy
+  - BurcatNS
+  - CHO
+external_libs:
+  - '../easy_rmg_model/testing/rmg2arc/thermo_lib_example.py'
