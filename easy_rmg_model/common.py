@@ -7,7 +7,6 @@ import yaml
 from typing import Union
 
 
-
 def regularize_path(path: str) -> str:
     """
     Regularize the path.
@@ -99,3 +98,23 @@ def string_representer(dumper, data):
     if len(data.splitlines()) > 1:
         return dumper.represent_scalar(tag='tag:yaml.org,2002:str', value=data, style='|')
     return dumper.represent_scalar(tag='tag:yaml.org,2002:str', value=data)
+
+
+def read_yaml_file(path: str) -> dict or list:
+    """
+    Read a YAML file and return the parameters as python variables.
+
+    Args:
+        path (str): The YAML file path to read.
+
+    Returns:
+        dict or list: The content read from the file.
+    """
+    if not isinstance(path, str):
+        raise ValueError(
+            f'Invalid path ({path}).')
+    if not os.path.isfile(path):
+        raise ValueError(f'Given path ({path}) does not exist.')
+    with open(path) as f:
+        content = yaml.load(stream=f, Loader=yaml.FullLoader)
+    return content
