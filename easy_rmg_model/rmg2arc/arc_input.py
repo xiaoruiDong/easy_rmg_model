@@ -115,8 +115,8 @@ def combine_spc_info(spc_info1: dict,
                 # Means we find it in spc_info1, skip
                 continue
         try:
-            # Compare if spc2 is the same thing as spc_info1[label]
-            dict_label, species = find_species_from_spc_dict(spc2, {label: spc_dict[label]})
+            # Compare if spc2 is in the spc_dict
+            dict_label, species = find_species_from_spc_dict(spc2, spc_dict)
         except:
             # If we cannot generate geom info, it is a bad item
             continue
