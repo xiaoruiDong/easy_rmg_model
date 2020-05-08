@@ -110,20 +110,13 @@ def find_species_from_spc_dict(spc: Union[dict, Species, Molecule],
                     and spc['adjlist'] == spc_dict[label].molecule[0].to_smiles():
                 # label and adjacency list are identical
                 return label, spc_dict[label]
-            if 'smiles' in spc:
-                # smiles are different (may be using non-canonical smiles)
-                species = Species().from_smiles(spc['smiles'])
-            elif 'adjlist' in spc:
-                # smiles are different (may be different atom order)
-                species = Species().from_adjacency_list(spc['adjlist'])
-            elif 'xyz' in spc:
-                # Generate the species from xyz
-                species = Species(label=label)
-                species.set_structure(xyz_to_mol(spc['xyz']).to_smiles())
-            else:
+            species = species_from_spc_info(spc, resonance=False)
+            if not species:
                 raise ValueError('Invalid species info which has no geom info.')
             if spc_dict[label].is_isomorphic(species):
                 return label, spc_dict[label]
+        else:
+            species = species_from_spc_info(spc, resonance=False)
 
     elif isinstance(spc, (Molecule, Species)):
         if hasattr(spc, 'label') and spc.label in spc_dict:
