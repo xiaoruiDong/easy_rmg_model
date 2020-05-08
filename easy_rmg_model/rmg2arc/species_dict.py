@@ -137,3 +137,30 @@ def find_species_from_spc_dict(spc: Union[dict, Species, Molecule],
             if species_in_dict.is_isomorphic(species):
                 return label, species_in_dict
     return None, None
+
+
+def spc_dict_from_spc_info(spc_info: dict, resonance: bool = True) -> dict:
+    """
+    Generate a species dictionary from species info.
+
+    Args:
+        spc_info (dict): Species info contains the label and species geom info.
+        resonance (bool): Whether generate resonance geom in the species dictionary.
+    Returns:
+        dict : The species dictionary generated from the spc_info.
+    """
+    spc_dict = {}
+    for label, spc in spc_info.items():
+        if 'adjlist' in spc:
+            spc_dict[label] = Species(label=label).from_adjacency_list(spc['adjlist'])
+        elif 'smiles' in spc:
+            spc_dict[label] = Species(label=label).from_smiles(spc['smiles'])
+        elif 'xyz' in spc:
+            spc_dict[label] = Species(label=label)
+            spc_dict[label].set_structure(xyz_to_mol(spc['xyz']).to_smiles())
+        else:
+            # TODO: Add warning
+            continue
+        if resonance:
+            spc_dict[label].generate_resonance_structures()
+    return spc_dict
