@@ -5,9 +5,6 @@
 
 import argparse
 import os
-from typing import Union
-
-from rmgpy.molecule.molecule import Molecule
 
 from easy_rmg_model.common import regularize_path, save_yaml_file
 from easy_rmg_model.rmg2arc.arc_input import combine_arc_species_inputs
