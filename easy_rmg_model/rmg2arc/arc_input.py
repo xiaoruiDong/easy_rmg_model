@@ -6,6 +6,8 @@ The toolbox for works related to ARC input files
 
 from typing import Optional, Union
 
+from arc.common import read_yaml_file
+
 from easy_rmg_model.rmg2arc.species_dict import (expand_spc_info_by_spc_dict,
                                                  find_species_from_spc_dict,
                                                  spc_dict_from_spc_info)
@@ -124,3 +126,37 @@ def combine_spc_info(spc_info1: dict,
             spc_dict.update(spc_dict_from_spc_info({label: spc2}, resonance=resonance))
 
     return combined_spc_info
+
+
+def combine_arc_species_inputs(*inputs: Union[list, tuple],
+                               resonance: bool = True):
+    """
+    Combine the ARC species sections.
+
+    Args:
+        inputs: input files, either path or the actual ``dict``.
+        resonance (bool): Generate resonance structures when checking isomorphism.
+
+    Returns:
+        dict: A dict contains combined species section.
+    """
+    arc_inputs = []
+    for input_file in inputs:
+        if isinstance(input_file, str):
+            arc_inputs.append(read_yaml_file(input_file))
+        elif isinstance(input_file, dict):
+            arc_inputs.append(input_file)
+
+    spc_infos = []
+    for input_file in arc_inputs:
+        if not 'species' in input_file:
+            raise ValueError('Invalid Input file which does not have species sections.')
+        spc_infos.append({spc['label']: spc for spc in input_file['species']})
+
+    combined_spc_info = combine_spc_infos(*spc_infos, resonance=resonance)
+
+    # Generate ARC input
+    arc_input = {'species': []}
+    arc_input['species'] = [spc for spc in combined_spc_info.values()]
+
+    return arc_input
