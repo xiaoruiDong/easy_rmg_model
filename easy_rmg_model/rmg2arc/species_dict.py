@@ -8,6 +8,11 @@ import os
 from typing import Optional, Union
 
 from rmgpy.chemkin import load_species_dictionary
+from rmgpy.molecule.molecule import Molecule
+from rmgpy.species import Species
+
+from easy_rmg_model.species.converter import xyz_to_mol
+
 
 def load_spc_dict(spc_dict: Union[dict, str]) -> dict:
     """
@@ -73,8 +78,62 @@ def expand_spc_info_by_spc_dict(spc_info: dict,
                     print(f'Warning: Cannot generate {attribute} for the species {label}.')
     return spc_info
 
-                spc.update({'smiles': smiles,
-                            'adjlist': adjlist,
-                            'multiplicity': rmg_spc.multiplicity,
-                            'charge': charge, })
-    return spc_info
+
+def find_species_from_spc_dict(spc: Union[dict, Species, Molecule],
+                               spc_dict: Union[str, dict],
+                               ) -> Optional[Species]:
+    """
+    Find a species from a species dictionary. It will firstly check if any label match, then
+    compare the string geometric representation, then the graphical geometric representation.
+
+    Args:
+        spc (Union[dict, Species, Molecule]): A data structure which stores molecule info.
+        spc_dict (Union[str, dict]): The path or the actual dict of species dictionary.
+
+    Returns:
+        Optional[Species]: the species stored in the dictionary if match, ``None`` otherwise.
+    """
+    spc_dict = load_spc_dict(spc_dict)
+
+    if isinstance(spc, dict):
+        if not 'label' in spc:
+            raise ValueError('Invalid species info which should at least label info.')
+        label = spc['label']
+        if label in spc_dict:
+            # Species dictionary has a same-label entry
+            # Try cheap method before comparing isomorphism
+            if 'smiles' in spc \
+                    and spc['smiles'] == spc_dict[label].molecule[0].to_smiles():
+                # label and smiles are identical
+                return label, spc_dict[label]
+            if 'adjlist' in spc \
+                    and spc['adjlist'] == spc_dict[label].molecule[0].to_smiles():
+                # label and adjacency list are identical
+                return label, spc_dict[label]
+            if 'smiles' in spc:
+                # smiles are different (may be using non-canonical smiles)
+                species = Species().from_smiles(spc['smiles'])
+            elif 'adjlist' in spc:
+                # smiles are different (may be different atom order)
+                species = Species().from_adjacency_list(spc['adjlist'])
+            elif 'xyz' in spc:
+                # Generate the species from xyz
+                species = Species(label=label)
+                species.set_structure(xyz_to_mol(spc['xyz']).to_smiles())
+            else:
+                raise ValueError('Invalid species info which has no geom info.')
+            if spc_dict[label].is_isomorphic(species):
+                return label, spc_dict[label]
+
+    elif isinstance(spc, (Molecule, Species)):
+        if hasattr(spc, 'label') and spc.label in spc_dict:
+            if spc.to_smiles() == spc_dict[spc.label].molecule[0].to_smiles():
+                return label, spc_dict[spc.label]
+            if spc_dict[spc.label].is_isomorphic(spc):
+                return label, spc_dict[spc.label]
+        species = spc
+
+    for species_in_dict in spc_dict.values():
+            if species_in_dict.is_isomorphic(species):
+                return label, species_in_dict
+    return None, None
