@@ -88,7 +88,7 @@ def save_yaml_file(path: str,
     with open(new_path, 'w') as f:
         f.write(content)
 
-    return True
+    return new_path
 
 
 def string_representer(dumper, data):
