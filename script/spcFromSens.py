@@ -25,7 +25,7 @@ def parse_arguments():
                         help='The folder path to sensitivity results')
     parser.add_argument('-s', '--software', nargs='?', const='rmg', default='rmg',
                         type=str, help='The software used to generate the flux diagram')
-    parser.add_argument('-o', '--output', nargs=1, help='The path to save results')
+    parser.add_argument('-o', '--output', nargs=1, help='The dir path to save results')
 
     args = parser.parse_args()
 
@@ -68,8 +68,8 @@ def main():
         spc.update({'label': spc_aliases[label]})
         arc_input['species'].append(spc)
 
-    if not output:
-        output = os.path.join(os.curdir, 'input_sens.yml')
+    output = output or os.curdir
+    output = os.path.join(output, 'input_sens.yml')
     actual_output_path = save_yaml_file(output, arc_input, overwrite=False)
     print(f'Saved to {actual_output_path}.')
 

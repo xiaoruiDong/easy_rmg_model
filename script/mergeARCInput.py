@@ -20,7 +20,7 @@ def parse_arguments():
                         help='Other inputs to be merged')
     parser.add_argument('-n', '--non_resonance', nargs='?', const=True, default=False,
                         help='Whether generating resonance structure to check duplicates')
-    parser.add_argument('-o', '--output', help='The path to save results')
+    parser.add_argument('-o', '--output', help='The dir path to save results')
 
     args = parser.parse_args()
 
@@ -43,8 +43,8 @@ def main():
 
     arc_input = combine_arc_species_inputs(*inputs, resonance)
 
-    if not output:
-        output = os.path.join(os.curdir, 'input_merged.yml')
+    output = output or os.curdir
+    output = os.path.join(output, 'input_merged.yml')
     actual_output_path = save_yaml_file(output, arc_input, overwrite=False)
     print(f'Saved to {actual_output_path}.')
 

@@ -111,8 +111,7 @@ def main():
             # other species
             arc_input2['species'].append(spc)
 
-    if not output:
-        output = os.curdir
+    output = output or os.curdir
     output1 = os.path.join(output, 'input_cleaned_mul12.yml')
     output2 = os.path.join(output, 'input_cleaned_mul3p.yml')
     actual_output_path1 = save_yaml_file(output1, arc_input1, overwrite=False)
