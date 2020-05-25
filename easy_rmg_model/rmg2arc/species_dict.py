@@ -71,7 +71,7 @@ def expand_spc_info_by_spc_dict(spc_info: dict,
                     elif attribute == 'charge':
                         spc[attribute] = molecule.get_net_charge()
                     elif attribute == 'multiplicity':
-                        spc[attribute] = molecule.get_net_charge()
+                        spc[attribute] = molecule.multiplicity
                     else:
                         spc[attribute] = molecule.to_adjacency_list()
                 except:
