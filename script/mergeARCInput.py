@@ -44,7 +44,7 @@ def main():
     arc_input = combine_arc_species_inputs(*inputs, resonance)
 
     if not output:
-        output = os.path.join('.', 'input_merged.yml')
+        output = os.path.join(os.curdir, 'input_merged.yml')
     actual_output_path = save_yaml_file(output, arc_input, overwrite=False)
     print(f'Saved to {actual_output_path}.')
 

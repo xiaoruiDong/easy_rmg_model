@@ -69,7 +69,7 @@ def main():
         arc_input['species'].append(spc)
 
     if not output:
-        output = os.path.join(model_path, 'input_sens.yml')
+        output = os.path.join(os.curdir, 'input_sens.yml')
     actual_output_path = save_yaml_file(output, arc_input, overwrite=False)
     print(f'Saved to {actual_output_path}.')
 

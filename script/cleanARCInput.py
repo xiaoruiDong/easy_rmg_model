@@ -104,7 +104,7 @@ def main():
     arc_input = {'species': [spc for spc in cleaned_info.values()]}
 
     if not output:
-        output = os.path.join('.', 'input_cleaned.yml')
+        output = os.path.join(os.curdir, 'input_cleaned.yml')
     actual_output_path = save_yaml_file(output, arc_input, overwrite=False)
     print(f'Saved to {actual_output_path}.')
 
