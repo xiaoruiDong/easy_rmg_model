@@ -15,7 +15,7 @@ from rmgpy.molecule.molecule import Molecule
 from rmgpy.chemkin import load_species_dictionary
 
 from easy_rmg_model.common import regularize_path
-from easy_rmg_model.settings import RMG_PATH
+from easy_rmg_model.settings import CONDA_ENV, RMG_PATH
 from easy_rmg_model.template_writer.input import RMGSimulateInput
 from easy_rmg_model.template_writer.submit import SLURMSubmitScript
 
@@ -23,10 +23,12 @@ from easy_rmg_model.template_writer.submit import SLURMSubmitScript
 DEFAULT_TS = [700, 800, 900, 1000, 1200, 1400, 1600, 2000]  # in Kelvin
 DEFAULT_PS = [10, 30, 50]  # in atm
 DEFAULT_PHIS = [0.5, 1.0, 1.5]
-DEFAULT_TF = 10.0  # in seconds
-DEFAULT_JOB_TIME_OUT = 5 * 60 * 60  # 5 hours
 CHECK_POOLING_JOB = 2 * 60  # 2 min
 DEFAULT_POOL_SIZE = 3
+QUEUE_SPEC = {'partition': 'long',
+              'n_processor': 1,
+              'mem_per_cpu': 8000,  # MB,
+              'job_time': '10-00', }
 
 
 def parse_arguments():
@@ -109,18 +111,14 @@ def main():
             input_path = os.path.join(work_dir, 'input.py')
             submit_script_path = os.path.join(work_dir, 'submit_script.sh')
 
-            content = f"""conda activate arc_env
-python "{RMG_PATH}/scripts/simulate.py" "{input_path}" "{chemkin_path}" "{spc_dict_path}"
-conda deactivate
-"""
-            spec = {
-                'partition': 'long',
-                'job_name': f'S{T}_{P}_{phi}',
-                'n_processor': 1,
-                'mem_per_cpu': 8000,  # MB,
-                'job_time': '10-00',
-                'content': content,
-                'save_path': submit_script_path,
+            content = f"conda activate {CONDA_ENV}\n" if CONDA_ENV else ""
+            content += f'python "{RMG_PATH}/scripts/simulate.py" "{input_path}" "{chemkin_path}" "{spc_dict_path}"'
+            content += "conda deactivate" if CONDA_ENV else ""
+
+            spec = {**QUEUE_SPEC,
+                    **{'job_name': f'S{T}_{P}_{phi}',
+                       'content': content,
+                       'save_path': submit_script_path, }
             }
             submit_script = SLURMSubmitScript(spec)
             submit_script.save()
