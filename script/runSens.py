@@ -15,20 +15,16 @@ from rmgpy.molecule.molecule import Molecule
 from rmgpy.chemkin import load_species_dictionary
 
 from easy_rmg_model.common import regularize_path
-from easy_rmg_model.settings import CONDA_ENV, RMG_PATH
+from easy_rmg_model.settings import (CONDA_ENV,
+                                     PHIS_POST_PROCESS,
+                                     POOL_SIZE_POST_PROCESS,
+                                     POOL_CHECK_FREQ_POST_PROCESS,
+                                     PS_POST_PROCESS,
+                                     QUEUE_SPEC_POST_PROCESS,
+                                     RMG_PATH,
+                                     TS_POST_PROCESS)
 from easy_rmg_model.template_writer.input import RMGSimulateInput
 from easy_rmg_model.template_writer.submit import SLURMSubmitScript
-
-
-DEFAULT_TS = [700, 800, 900, 1000, 1200, 1400, 1600, 2000]  # in Kelvin
-DEFAULT_PS = [10, 30, 50]  # in atm
-DEFAULT_PHIS = [0.5, 1.0, 1.5]
-CHECK_POOLING_JOB = 2 * 60  # 2 min
-DEFAULT_POOL_SIZE = 3
-QUEUE_SPEC = {'partition': 'long',
-              'n_processor': 1,
-              'mem_per_cpu': 8000,  # MB,
-              'job_time': '10-00', }
 
 
 def parse_arguments():
@@ -50,11 +46,10 @@ def parse_arguments():
 
     model_path = regularize_path(args.model_path[0])
     sens_path = regularize_path(args.sensitivity_path[0])
-    Ts = [float(T)
-          for T in args.temperature] if args.temperature else DEFAULT_TS
-    Ps = [float(P) for P in args.pressure] if args.pressure else DEFAULT_PS
-    phis = [float(phi) for phi in args.phi] if args.phi else DEFAULT_PHIS
-    pool_size = DEFAULT_POOL_SIZE if not args.pool_size else args.pool_size[0]
+    Ts = [float(T) for T in args.temperature] if args.temperature else TS_POST_PROCESS
+    Ps = [float(P) for P in args.pressure] if args.pressure else PS_POST_PROCESS
+    phis = [float(phi) for phi in args.phi] if args.phi else PHIS_POST_PROCESS
+    pool_size = POOL_SIZE_POST_PROCESS if not args.pool_size else args.pool_size[0]
 
     return model_path, sens_path, Ts, Ps, phis, pool_size
 
@@ -115,7 +110,7 @@ def main():
             content += f'python "{RMG_PATH}/scripts/simulate.py" "{input_path}" "{chemkin_path}" "{spc_dict_path}"'
             content += "conda deactivate" if CONDA_ENV else ""
 
-            spec = {**QUEUE_SPEC,
+            spec = {**QUEUE_SPEC_POST_PROCESS,
                     **{'job_name': f'S{T}_{P}_{phi}',
                        'content': content,
                        'save_path': submit_script_path, }

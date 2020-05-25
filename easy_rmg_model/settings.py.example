@@ -9,3 +9,20 @@ ARC_PATH = '/Users/xiaorui/Apps/ARC'
 
 # Conda environment
 CONDA_ENV = "arc_env"
+
+# Simulate settings
+TS_POST_PROCESS = [700, 800, 900, 1000, 1200, 1400, 1600, 2000]  # in Kelvin
+PS_POST_PROCESS = [10, 30, 50]  # in atm
+PHIS_POST_PROCESS = [0.5, 1.0, 1.5]
+SIM_TIME_FINAL_POST_PROCESS = 10.0  # in seconds
+SIM_TIME_OUT_POST_PROCESS = 5 * 60 * 60  # 5 hours, void simulate and flux diagram run forever
+POOL_SIZE_POST_PROCESS = 4 # max job number in queue
+POOL_CHECK_FREQ_POST_PROCESS = 2 * 60  # 2 min
+SENS_SPECIES = [{'smiles': '[OH]', },
+                {'smiles': '[H]', },
+                {'smiles': 'O[O]', }, ]
+IDT_SPECIES = {'smiles': '[OH]', }
+QUEUE_SPEC_POST_PROCESS = {'partition': 'long',
+                           'n_processor': 1,
+                           'mem_per_cpu': 8000,  # MB,
+                           'job_time': '10-00', }
