@@ -29,7 +29,7 @@ def parse_arguments():
     parser.add_argument('-f', '--filter_species', type=str, nargs='?',
                         help='A file contains the species to be filtered.')
     parser.add_argument('-o', '--output', type=str, nargs='?',
-                        help='The path to save results.')
+                        help='The dir path to save results.')
 
     args = parser.parse_args()
 
@@ -101,12 +101,24 @@ def main():
 
     # Convert species info to ARC input
     print(f'Eventually, {len(cleaned_info)} species are left...')
-    arc_input = {'species': [spc for spc in cleaned_info.values()]}
+
+    arc_input1, arc_input2 = {'species': []}, {'species': []}
+    for spc in cleaned_info.values():
+        if ('multiplicity' in spc) and (spc['multiplicity'] < 3):
+            # closed_shell species and multiplicity 1 species
+            arc_input1['species'].append(spc)
+        else:
+            # other species
+            arc_input2['species'].append(spc)
 
     if not output:
-        output = os.path.join(os.curdir, 'input_cleaned.yml')
-    actual_output_path = save_yaml_file(output, arc_input, overwrite=False)
-    print(f'Saved to {actual_output_path}.')
+        output = os.curdir
+    output1 = os.path.join(output, 'input_cleaned_mul12.yml')
+    output2 = os.path.join(output, 'input_cleaned_mul3p.yml')
+    actual_output_path1 = save_yaml_file(output1, arc_input1, overwrite=False)
+    actual_output_path2 = save_yaml_file(output2, arc_input2, overwrite=False)
+    print(f'Species with mulitplicity < 3 are saved to {actual_output_path1}.\n'
+          f'Species with mulitplicity >= 3 are saved to {actual_output_path2}.')
 
 if __name__ == '__main__':
     main()
