@@ -6,3 +6,6 @@ RMG_PATH = '/Users/xiaorui/Apps/RMG-Py'
 
 # path to your local ARC depository
 ARC_PATH = '/Users/xiaorui/Apps/ARC'
+
+# Conda environment
+CONDA_ENV = "arc_env"
