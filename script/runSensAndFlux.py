@@ -23,9 +23,13 @@ DEFAULT_TS = [700, 800, 900, 1000, 1200, 1400, 1600, 2000]  # in Kelvin
 DEFAULT_PS = [10, 30, 50]  # in atm
 DEFAULT_PHIS = [0.5, 1.0, 1.5]
 DEFAULT_TF = 10.0  # in seconds
-DEFAULT_JOB_TIME_OUT = 5 * 60 * 60  # 5 hours
+DEFAULT_JOB_TIME_OUT = 5 * 60 * 60  # 5 hours, for simulate and flux diagram
 CHECK_POOLING_JOB = 2 * 60  # 2 min
 DEFAULT_POOL_SIZE = 3
+SENS_SPECIES = [{'smiles': '[OH]', },
+                {'smiles': '[H]', },
+                {'smiles': 'O[O]', }, ]
+IDT_SPECIES = {'smiles': '[OH]', }
 
 
 def parse_arguments():
@@ -161,6 +165,7 @@ def main():
     spc_num = len(spc_dict)
 
     fuel = find_molecule(fuel, spc_dict)
+    idt_species = find_molecule(IDT_SPECIES["smiles"], spc_dict)
 
     for T, P, phi in itertools.product(Ts, Ps, phis):
 
@@ -191,9 +196,9 @@ def main():
                 df = pd.read_csv(os.path.join(work_dir, 'solver',
                                               f'simulation_1_{spc_num}.csv'))
                 df = df.set_index('Time (s)')
-                idt = df['OH(6)'].idxmax()
+                idt = df[idt_species["label"]].idxmax()
             except:
-                print('Cannot get ignition delay time. Use default time {tf}')
+                print(f'Cannot get ignition delay time. Use default time ({tf} seconds).')
                 idt = tf
         else:
             idt = tf
@@ -212,10 +217,7 @@ def main():
         work_dir = os.path.join(outputs['sensitivity'], folder_name,)
         os.makedirs(work_dir, exist_ok=True)
         input_path = os.path.join(work_dir, 'input.py')
-        sens_spc = [{'smiles': '[OH]', },
-                    {'smiles': '[H]', },
-                    {'smiles': 'O[O]', }, ]
-        spec.update({'sens_spc': sens_spc,
+        spec.update({'sens_spc': SENS_SPECIES,
                      'tf': idt})
         generate_rmg_input_file(spec, save_path=input_path)
 
