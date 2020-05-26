@@ -49,7 +49,7 @@ def parse_arguments():
     Ts = [float(T) for T in args.temperature] if args.temperature else TS_POST_PROCESS
     Ps = [float(P) for P in args.pressure] if args.pressure else PS_POST_PROCESS
     phis = [float(phi) for phi in args.phi] if args.phi else PHIS_POST_PROCESS
-    pool_size = POOL_SIZE_POST_PROCESS if not args.pool_size else args.pool_size[0]
+    pool_size = POOL_SIZE_POST_PROCESS if not args.pool_size else args.pool_size
 
     return model_path, sens_path, Ts, Ps, phis, pool_size
 
