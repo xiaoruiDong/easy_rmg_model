@@ -170,6 +170,8 @@ def main():
     print('Running in parallel with {pool} processors'.format(pool=pool_size))
     with Pool(pool_size) as p:
             p.map(running_similation, itertools.product(Ts, Ps, phis))
+    p.close()
+    p.join()
     # Sensitivity usually takes longer, use queue software
     run_sensitivity(
         model_path, outputs['sensitivity'], Ts, Ps, phis, pool_size)

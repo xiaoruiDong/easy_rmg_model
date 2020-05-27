@@ -107,7 +107,7 @@ def main():
             submit_script_path = os.path.join(work_dir, 'submit_script.sh')
 
             content = f"conda activate {CONDA_ENV}\n" if CONDA_ENV else ""
-            content += f'python "{RMG_PATH}/scripts/simulate.py" "{input_path}" "{chemkin_path}" "{spc_dict_path}"'
+            content += f'python "{RMG_PATH}/scripts/simulate.py" "{input_path}" "{chemkin_path}" "{spc_dict_path}"\n'
             content += "conda deactivate" if CONDA_ENV else ""
 
             spec = {**QUEUE_SPEC_POST_PROCESS,
