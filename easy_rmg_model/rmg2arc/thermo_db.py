@@ -11,36 +11,36 @@ from rmgpy import settings as rmg_settings
 from rmgpy.data.thermo import ThermoDatabase, ThermoLibrary
 
 
+
 def load_thermo_lib_by_path(path: str,
-                            thermo_db: ThermoDatabase):
+                            thermo_db: ThermoDatabase,
+                            reload: bool = False):
     """
-    Load thermo library given its path. This is really helpful when the
-    library is not located in the RMG-database.
+    Load thermo library given its library path and store it into
+    the given RMG ThermoDatabase instance
 
     Args:
         path (str): Path to thermo library file
         thermo_database (ThermoDatabase): RMG thermo database object
+        reload (bool): Whether to reload the library if this library is in the ThermoDatabase
     """
-    if not os.path.exists(path):
-       raise ValueError(f'The library file {path} does not exist.')
-
-    if path not in thermo_db.library_order:
-        lib = ThermoLibrary()
-        try:
-            lib.load(path,
-                     ThermoDatabase().local_context,
-                     ThermoDatabase().global_context)
-        except:
-            raise ValueError(f'The library file {path} is not vaild.')
-            return
-        else:
-            lib.label = path
-            thermo_db.libraries[lib.label] = lib
-            thermo_db.library_order.append(lib.label)
-            print(f'Loading thermo library {os.path.split(path)[1]} '
-                  f'from {os.path.split(path)[0]} ...')
+    lib = ThermoLibrary()
+    try:
+        lib.load(path,
+                 ThermoDatabase().local_context,
+                 ThermoDatabase().global_context)
+    except FileNotFoundError:
+        print(f'The library file {path} does not exist.')
+    except (SyntaxError, ImportError):
+        print(f'The library file {path} is not valid.')
     else:
-        print(f'The library {path} has already been loaded')
+        if path in thermo_db.library_order and not reload:
+            print(f'The library {path} has already been loaded.')
+        elif path not in thermo_db.library_order:
+            thermo_db.library_order.append(lib.label)
+        lib.label = path
+        thermo_db.libraries[lib.label] = lib
+        print(f'The thermodynamics library {path} is loaded.')
 
 
 def load_thermo_database(libraries: Optional[list] = None):
