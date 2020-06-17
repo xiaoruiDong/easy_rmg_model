@@ -55,3 +55,31 @@ def load_thermo_database(libraries: Optional[list] = None):
     thermo_db = ThermoDatabase()
     thermo_db.load(thermo_db_path, libraries=libraries)
     return thermo_db
+
+
+def find_thermo_libs(path: str):
+    """
+    This function search for the thermo library
+    based on ``RMG libraries/thermo/*.py``
+
+    Args:
+        path (str): The path to project directories
+
+    Returns:
+        thermo_lib_list (list): Entries of the path to thermo libraries
+    """
+    # Initiate the thermo lib list
+    thermo_lib_list = list()
+    # Walk through the dirs under path
+    for root_p, dirs, _ in os.walk(path):
+        if not dirs:
+            continue
+        # Use ARC folder organization to check thermo library
+        chk_path = os.path.join(root_p, 'RMG libraries', 'thermo')
+        if os.path.isdir(chk_path):
+            # Find the corresponding thermo lib file
+            thermo_lib = glob.glob(os.path.join(chk_path, '*.py'))
+            if thermo_lib:
+                thermo_lib_list.append(thermo_lib[0])
+                print(f'Find thermo library at {thermo_lib[0]}')
+    return thermo_lib_list
