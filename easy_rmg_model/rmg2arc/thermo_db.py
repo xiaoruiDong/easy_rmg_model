@@ -4,12 +4,15 @@
 The toolbox for works related to RMG thermo database
 """
 
+import glob
 import os
+from copy import deepcopy
 from typing import Optional
 
 from rmgpy import settings as rmg_settings
 from rmgpy.data.thermo import ThermoDatabase, ThermoLibrary
 
+from easy_rmg_model.plotter import compare_thermo
 
 
 def load_thermo_lib_by_path(path: str,
@@ -83,3 +86,56 @@ def find_thermo_libs(path: str):
                 thermo_lib_list.append(thermo_lib[0])
                 print(f'Find thermo library at {thermo_lib[0]}')
     return thermo_lib_list
+
+
+def merge_thermo_lib(base_lib, lib_to_add, tbd_lib):
+    """
+    Merge one library (lib_to_add) into the base library
+
+    Args:
+        base_lib (RMG thermo library): The library used as the base
+        lib_to_add (RMG thermo library): The library to be added to the base library
+    """
+    for spc_label, spc in lib_to_add.entries.items():
+        # Loop through the species in the base library to check duplicates
+        spc.item.generate_resonance_structures()
+        formula = spc.item.get_formula()
+        for _, base_spc in base_lib.entries.items():
+            formula_base = base_spc.item.get_formula()
+            if formula != formula_base:
+                continue
+            if spc.item.is_isomorphic(base_spc.item):
+                in_base = True
+                break
+        else:
+            in_base = False
+
+        if in_base:
+            compare_thermo([base_spc, spc],
+                           fig_title=spc.label,
+                           legends=["Previously merged thermo",
+                                    "New thermo"])
+            add, reject, tbd = False, False, False
+            while (not add) and (not reject) and (not tbd):
+                decision = input("add?(A)/ reject?(R) / TBD? (T):")
+                if decision.lower() in "add":
+                    add = True
+                elif decision.lower() in "reject":
+                    reject = True
+                elif decision.lower() in "tbd":
+                    tbd = True
+            if tbd:
+                spc.index = len(tbd_lib.entries)
+                tbd_lib.entries.update({spc_label: deepcopy(spc)})
+                print(
+                    f'The thermo of {spc.label} will be reconsidered later.')
+            elif add:
+                base_spc.data = deepcopy(spc.data)
+                print(
+                    f'The thermo of {spc.label} is updated according to {lib_to_add.label}.')
+        else:
+            spc.index = len(base_lib.entries)
+            base_lib.entries.update({spc_label: deepcopy(spc)})
+            spc.short_desc += "\nAdded to the base library {}".format(
+                base_lib.label)
+            print(f'The thermo of {spc.label} from {lib_to_add.label} is merged.')
