@@ -39,9 +39,11 @@ def load_thermo_lib_by_path(path: str,
     else:
         if path in thermo_db.library_order and not reload:
             print(f'The library {path} has already been loaded.')
+            return
         elif path not in thermo_db.library_order:
-            thermo_db.library_order.append(lib.label)
+            thermo_db.library_order.append(path)
         lib.label = path
+        lib.name = path
         thermo_db.libraries[lib.label] = lib
         print(f'The thermodynamics library {path} is loaded.')
 
