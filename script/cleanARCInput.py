@@ -99,6 +99,13 @@ def main():
                                         spc_info2={label: spc},
                                         spc_dict=cleaned_spc_dict)
 
+    # Remove not desirable symbol from species label
+    replace_list = ["(", ")", "#"]
+    for spc in cleaned_info.values():
+    for symbol in replace_list:
+        if symbol in spc['label']:
+            spc['label'] = spc['label'].replace(symbol, "_")
+
     # Convert species info to ARC input
     print(f'Eventually, {len(cleaned_info)} species are left...')
 
