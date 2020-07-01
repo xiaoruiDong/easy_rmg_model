@@ -37,7 +37,7 @@ from easy_rmg_model.species.converter import (xyz_to_mol,
 
 from arc.species.species import ARCSpecies, determine_rotor_symmetry, enumerate_bonds
 
-from easy_rmg_model.template_writer.input import ArkaneInput, GaussianInput
+from easy_rmg_model.template_writer.input import ArkaneSpecies, GaussianInput
 
 from arkane.statmech import is_linear
 
@@ -365,7 +365,7 @@ def generate_arkane_input(spc,
     for use_bac, file_name in bac:
         extra_dict = {'use_bond_corrections': use_bac,
                       'save_path': os.path.join(save_dir, file_name)}
-        arkane = ArkaneInput({**spc, **arkane_spec, **extra_dict})
+        arkane = ArkaneSpecies({**spc, **arkane_spec, **extra_dict})
         arkane.save()
 
 

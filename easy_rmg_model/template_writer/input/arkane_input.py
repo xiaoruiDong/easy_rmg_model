@@ -4,11 +4,13 @@
 import json
 
 from arkane.encorr.corr import assign_frequency_scale_factor
+from arkane.input import process_model_chemistry
+from arkane.modelchem import LOT
 
 from easy_rmg_model.template_writer import BaseTemplateWriter
 
 
-class ArkaneInput(BaseTemplateWriter):
+class ArkaneSpecies(BaseTemplateWriter):
 
     default_settings = {
         'model_chemistry': 'cbs-qb3',
@@ -73,10 +75,21 @@ rotors = [
 """
 
     @property
+    def model_chemistry(self):
+        return self._model_chemistry
+
+    @model_chemistry.setter
+    def model_chemistry(self, value):
+        if isinstance(value, str):
+            self._model_chemistry = process_model_chemistry(value)
+        elif isinstance(value, LOT):
+            self._model_chemsitry = value
+
+    @property
     def freq_scale_factor(self):
         if not self._freq_scale_factor:
             self._freq_scale_factor = assign_frequency_scale_factor(
-                self.model_chemistry)
+                self._model_chemistry)
         return self._freq_scale_factor
 
     @freq_scale_factor.setter
@@ -169,7 +182,7 @@ rotors = [
             raise ValueError(f'Not valid frequency, got {value}')
 
     def to_dict(self):
-        return {'model_chemistry': self. model_chemistry,
+        return {'model_chemistry': self. model_chemistry.to_model_chem(),
                 'freq_scale_factor': self.freq_scale_factor,
                 'use_bond_corrections': self.use_bond_corrections,
                 'atom_dict': self.atom_dict,
@@ -182,5 +195,97 @@ rotors = [
                 'optical_isomers': self.optical_isomers,
                 'energy': self.energy,
                 'freq': self.freq,
+                'save_path': self.save_path,
+                }
+
+
+class ArkaneThermo(BaseTemplateWriter):
+
+    default_settings = {
+        'model_chemistry': 'cbs-qb3',
+        'freq_scale_factor': None,
+        'use_bond_corrections': True,
+        'use_hindered_rotors': True,
+        'species_label': '',
+        'species_file': 'species.py',
+        'species_smiles': '',
+        'thermo_type': 'NASA',
+        'calc_statmech': True,
+        'template_file': None,
+        'save_path': './input.py'
+    }
+
+    default_template = """#!/usr/bin/env python3
+# encoding: utf-8
+
+modelChemistry = "{{ model_chemistry }}"
+frequencyScaleFactor = {{ freq_scale_factor }}
+useHinderedRotors = {{ use_hindered_rotors }}
+useBondCorrections = {{ use_bond_corrections }}
+
+
+species("{{ species_label }}",
+        "{{ species_file }}",
+        structure=SMILES("{{ species_smiles }}"),
+        )
+
+{%- if calc_statmech %}
+statmech("{{ species_label }}")
+{%- endif %}
+
+thermo("{{ species_label }}",
+       "{{ thermo_type }}")
+"""
+
+    @property
+    def model_chemistry(self):
+        return self._model_chemistry
+
+    @model_chemistry.setter
+    def model_chemistry(self, value):
+        if isinstance(value, str):
+            self._model_chemistry = process_model_chemistry(value)
+        elif isinstance(value, LOT):
+            self._model_chemsitry = value
+
+    @property
+    def freq_scale_factor(self):
+        if not self._freq_scale_factor:
+            self._freq_scale_factor = assign_frequency_scale_factor(
+                self._model_chemistry)
+        return self._freq_scale_factor
+
+    @freq_scale_factor.setter
+    def freq_scale_factor(self, value):
+        if value == None or \
+           (isinstance(value, (int, float)) and
+                value > 0 and value < 5):
+            self._freq_scale_factor = value
+        else:
+            raise ValueError(f'Not valid frequency scale factor, got: {value}')
+
+    @property
+    def species_smiles(self):
+        return self._smiles
+
+    @species_smiles.setter
+    def species_smiles(self, value):
+        self._smiles = value
+        if hasattr(self, 'species_label') and getattr(self, 'species_label'):
+            pass
+        else:
+            setattr(self, 'species_label', value)
+
+    def to_dict(self):
+        return {'model_chemistry': self. model_chemistry.to_model_chem(),
+                'freq_scale_factor': self.freq_scale_factor,
+                'use_bond_corrections': self.use_bond_corrections,
+                'freq_scale_factor': self.freq_scale_factor,
+                'use_hindered_rotors': self.use_hindered_rotors,
+                'species_label': self.species_label,
+                'species_file': self.species_file,
+                'species_smiles': self.species_smiles,
+                'thermo_type': self.thermo_type,
+                'calc_statmech': self.calc_statmech,
                 'save_path': self.save_path,
                 }
