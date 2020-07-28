@@ -245,7 +245,7 @@ def filter_scans(spc, scan_filter='latest'):
                     if time_1 <= time_2:
                         rotor['archived'].append(scan_path)
                         break
-                rotor['scan_path'] = scan_path
+                rotor['scan_path'].append(scan_path)
                 good_scans.append(scan_path)
                 break
     # Only keeps good scans
