@@ -52,12 +52,12 @@ externalSymmetry = {{ external_symmetry }}
 opticalIsomers = {{ optical_isomers }}
 
 energy = {
-    '{{ model_chemistry }}': Log('{{ energy }}'),
+    '{{ model_chemistry }}': Log('{{ energy | safe }}'),
 }
 
-geometry = Log('{{ freq }}')
+geometry = Log('{{ freq | safe }}')
 
-frequencies = Log('{{ freq }}')
+frequencies = Log('{{ freq | safe }}')
 
 {% if rotors_dict | length > 0 -%}
 rotors = [
