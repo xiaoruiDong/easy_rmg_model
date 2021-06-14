@@ -4,7 +4,7 @@
 
 import os
 
-import pybel
+from openbabel import pybel
 
 from rmgpy.molecule.molecule import Molecule
 from rmgpy.molecule.converter import from_ob_mol
