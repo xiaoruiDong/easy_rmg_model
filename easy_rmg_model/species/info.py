@@ -41,6 +41,15 @@ from easy_rmg_model.template_writer.input import ArkaneSpecies, GaussianInput
 
 from arkane.statmech import is_linear
 
+from rdmc.mol import RDKitMol
+try:
+    # openbabel 3
+    from openbabel import pybel
+except:
+    # openbabel 2
+    import pybel
+
+
 def find_all_species_from_calcs_path(calc_path):
     """
     A function used to find all species in the calcs folder.
