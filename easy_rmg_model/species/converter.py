@@ -3,8 +3,12 @@
 
 
 import os
-
-from openbabel import pybel
+try:
+    # openbabel 3
+    from openbabel import pybel
+except ImportError:
+    # openbabel 2
+    import pybel
 
 from rmgpy.molecule.molecule import Molecule
 from rmgpy.molecule.converter import from_ob_mol
