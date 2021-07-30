@@ -23,7 +23,7 @@ class GaussianInput(BaseTemplateWriter):
         'geom': '',
         'scan': [],
         'freeze': [],
-        'scan_res': 8,
+        'scan_res': 8.0,
         'multiplicity': 1,
         'charge': 0,
         'memory': 14000,  # mb
