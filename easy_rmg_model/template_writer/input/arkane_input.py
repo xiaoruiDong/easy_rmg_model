@@ -63,7 +63,7 @@ frequencies = Log('{{ freq | safe }}')
 rotors = [
 {%- for rotor in rotors_dict.values() %}
 {%- if rotor['success'] %}
-    HinderedRotor(scanLog=Log('{{ rotor['scan_path'] }}'),
+    HinderedRotor(scanLog=Log('{{ rotor['scan_path'] | safe }}'),
                   pivots={{ rotor['pivots'] }},
                   top={{ rotor['top'] }},
                   symmetry={{ rotor['symmetry'] }},
