@@ -63,7 +63,7 @@ def parse_arguments():
         job_path = getattr(args, f'{job_type}_path')
         outputs[job_type] = regularize_path(job_path[0]) if job_path else \
             os.path.join(os.path.dirname(model_path), job_type)
-    pool_size = POOL_SIZE_POST_PROCESS if not args.pool_size else args.pool_size[0]
+    pool_size = POOL_SIZE_POST_PROCESS if not args.pool_size else args.pool_size
 
     return model_path, fuel, Ts, Ps, phis, tf, outputs, pool_size
 
