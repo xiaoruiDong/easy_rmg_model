@@ -14,40 +14,34 @@ import matplotlib.pyplot as plt
 from arc.common import (determine_symmetry,
                         is_same_pivot)
 
-from arc.job.trsh import (scan_quality_check,
-                          trsh_scan_job)
+from arc.job.trsh import scan_quality_check
 from easy_rmg_model.job.trsh import determine_convergence
 
 from arc.parser import (parse_1d_scan_energies,
                         parse_scan_args,
                         parse_trajectory,
                         parse_xyz_from_file)
-from easy_rmg_model.parser import (parse_charge_and_mult,
-                                   parse_species_in_arc_input,
+from easy_rmg_model.parser import (parse_species_in_arc_input,
                                    parse_termination_time)
 
 from arc.plotter import plot_1d_rotor_scan
 
 from arc.species.converter import (compare_confs,
-                                   molecules_from_xyz,
+                                   str_to_xyz,
                                    xyz_to_xyz_file_format)
 from easy_rmg_model.species.converter import (xyz_to_mol,
-                                              xyz_to_rotors_dict,
+                                              rdmol_to_rotors_dict,
                                               xyz_to_xyz_file)
 
-from arc.species.species import ARCSpecies, determine_rotor_symmetry, enumerate_bonds
+from arc.species.species import determine_rotor_symmetry, enumerate_bonds
 
 from easy_rmg_model.template_writer.input import ArkaneSpecies, GaussianInput
 
 from arkane.statmech import is_linear
 
 from rdmc.mol import RDKitMol
-try:
-    # openbabel 3
-    from openbabel import pybel
-except:
-    # openbabel 2
-    import pybel
+from rdmc.external.rmg import from_rdkit_mol
+from rdmc.external.gaussian import GaussianLog
 
 
 def species_from_calcs_path(calc_path):
@@ -141,12 +135,14 @@ def find_latest_terminated_job(spc, job_types=['composite', 'freq']):
         path, t_time = '', datetime.datetime(1970, 1, 1)
         for file in spc[job_type]:
             try:
-                file_ttime = parse_termination_time(file)
+                log = GaussianLog(file)
+                file_ttime = log.get_termination_time()
             except Exception as e:
                 print('problem', e)
                 continue
-            if file_ttime > t_time:
-                path, t_time = file, file_ttime
+            else:
+                if file_ttime is not None and file_ttime > t_time:
+                    path, t_time = file, file_ttime
         spc[job_type] = path
     return spc
 
@@ -159,7 +155,10 @@ def check_converge_and_geom_consist(spc,
     done = determine_convergence(spc[basis_job], basis_job, spc['ts'])
     if done:
         try:
-            basis_xyz = parse_xyz_from_file(spc[basis_job])
+            # temporarily only support gaussian
+            log = GaussianLog(spc[basis_job])
+            converged_xyz = log.get_xyzs(converged=True)[-1]
+            basis_xyz = str_to_xyz('\n'.join(converged_xyz.splitlines()[2:]))
         except:
             pass
         else:
@@ -173,15 +172,16 @@ def check_converge_and_geom_consist(spc,
     spc['geom'] = basis_xyz
     spc['final_xyz'] = basis_xyz
     spc['checkfile'] = ''
-    spc['charge'], spc['multiplicity'] = parse_charge_and_mult(spc[basis_job])
+    spc['charge'], spc['multiplicity'] = log.charge, log.multiplicity
     try:
-        spc['smiles'] = xyz_to_mol(spc['geom']).to_smiles()
+        spc['rdmol'] = log.get_mol(embed_conformers=False, backend='openbabel')
+        spc['smiles'] = spc['rdmol'].ToSmiles()
     except:
         try:
-            spc['smiles'] = molecules_from_xyz(spc['geom'],
-                                            spc['multiplicity'],
-                                            spc['charge'])[0].to_smiles()
-        except:
+            spc['rdmol'] = log.get_mol(embed_conformers=False, backend='jensen')
+            spc['smiles'] = spc['rdmol'].ToSmiles()
+        except Exception as e:
+            print(e)
             spc['smiles'] = ''
             logging.warning(f"Cannot generate SMILES for {spc['label']}")
 
@@ -211,16 +211,62 @@ def check_converge_and_geom_consist(spc,
     return spc
 
 
+def generate_geom_info(spc, xyz_file=None):
+    rdmol = spc.get('rdmol')
+    if rdmol is None:
+        if not 'geom' in spc:
+            xyz_file = xyz_file or os.path.join(spc['directory'], 'xyz.txt')
+            try:
+                spc['geom'] = parse_xyz_from_file(xyz_file)
+            except:
+                return
+        xyz_str = xyz_to_xyz_file_format(spc['geom'])
+        try:
+            rdmol = RDKitMol.FromXYZ(xyz_str, backend='openbabel')
+            rdmol.SaturateMol(multiplicity=spc['multiplicity'])
+        except:
+            try:
+                rdmol = RDKitMol.FromXYZ(xyz_str, backend='jensen')
+                rdmol.SaturateMol(multiplicity=spc['multiplicity'])
+            except:
+                return
+    mol = from_rdkit_mol(rdmol)
+    spc['mol'] = mol.to_adjacency_list()
+    spc['bond_dict'] = enumerate_bonds(mol)
+    spc['atom_dict'] = mol.get_element_count()
+    spc['linear'] = is_linear(coordinates=np.array(spc['geom']['coords']))
+    spc['external_symmetry'], spc['optical_isomers'] = determine_symmetry(
+        spc['geom'])
+    return spc
+
+
 def find_rotors_from_xyz(spc):
     """
     A function used to generate rotors dict from xyz.
     """
-    rotors_dict = xyz_to_rotors_dict(spc['geom'])
+    mol = spc['rdmol']
+    try:
+        mol.EmbedConformer()
+    except RuntimeError:
+        mol.EmbedNullConformer()
+    mol.SetPositions(spc['geom']['coords'])
+    if spc['ts']:
+        mol = mol.AddRedundantBonds(spc['form_and_break'])
+    torsions = [[atom + 1 for atom in tor]
+                for tor in mol.GetTorsionalModes()]
+    rotors_dict = rdmol_to_rotors_dict(spc['rdmol'])
     if rotors_dict is None:
         return
-    spc['rotors_dict'] = {ind: rotors_dict for ind,
-                          rotors_dict in enumerate(rotors_dict)}
-    spc['number_of_rotors'] = len(rotors_dict)
+    spc['rotors_dict'] = {}
+    for rotor in rotors_dict.values():
+        for tor in torsions:
+            if is_same_pivot(tor, rotor['scan']):
+                break
+        else:
+            ## not a valid one
+            continue
+        spc['rotors_dict'].update({len(spc['rotors_dict']): rotor})
+    spc['number_of_rotors'] = len(spc['rotors_dict'])
     return spc
 
 
