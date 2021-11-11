@@ -15,12 +15,14 @@ class GaussianSubmit(BaseTemplateWriter):
         'input': 'input.gjf',
         'output': 'input.log',
         'checkfile': 'check.chk',
+        'fchk_file': 'check.fchk',
+        'generate_fchk': True,
         'save_path': './gaussian_submit_script.sh',
         'template_file': None,
     }
 
     default_template = """{%- for module in modules %}
-module add {{ module }}
+module load {{ module }}
 {% endfor %}
 
 WorkDir={{ work_dir }}
@@ -43,8 +45,10 @@ cd $WorkDir
 cp "$SubmitDir/input.gjf" .
 cp "$SubmitDir/check.chk" .
 
-{{ package }} < {{ input }} > {{ output }}
-formchk {{ checkfile }} check.fchk
+{{ package }} < {{ input | safe }} > {{ output | safe }}
+{%- if generate_fchk %}
+formchk {{ checkfile | safe }} {{ fchk_file | safe }}
+{%- endif %}
 cp * "$SubmitDir/"
 
 rm -rf $GAUSS_SCRDIR
@@ -87,4 +91,7 @@ rm -rf $WorkDir
                 'package_root': self.package_root,
                 'input': self.input,
                 'output': self.output,
-                'checkfile': self.checkfile, }
+                'checkfile': self.checkfile,
+                'fchk_file': self.fchk_file,
+                'generate_fchk': self.generate_fchk,
+                }
