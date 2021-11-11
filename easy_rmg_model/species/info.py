@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
+import base64
 import datetime
 import json
 import logging
 import os
 import shutil
-import yaml
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -517,3 +517,103 @@ def transfer_to_database(spc, database_path, output_file_name='output.out'):
             pass
 
     return spc
+
+
+def get_spc_dataframe(spc_dict, rxn_dict, generate_thermo=True):
+    # Get the number of rxns of each species
+    if len(rxn_dict):
+        spc_rxn_involve_freq = {spc.label: 0 for spc in spc_dict.values()}
+        for rxn in rxn_dict.values():
+            for spc_in_rxn in rxn.reactants + rxn.products:
+                try:
+                    spc_rxn_involve_freq[spc_in_rxn.label] += 1
+                except Exception as e:
+                    print(e)
+    else:
+        spc_rxn_involve_freq = {spc: 0 for spc in spc_dict.keys()}
+
+    # Get image of each species
+    image_list = []
+    for spc_label in spc_dict.keys():
+        image_list.append(base64.b64encode(spc_dict[spc_label]._repr_png_()).decode())
+
+    df = pd.DataFrame({'label': list(spc_rxn_involve_freq.keys()),
+                       'image': image_list,
+                       'rxn_count': list(spc_rxn_involve_freq.values())})
+    df = df.set_index('label')
+
+
+    df['source'] = "group"
+    df['dG_700'] = 0
+    df['dG_1000'] = 0
+    df['dG_1500'] = 0
+    df['dG_2000'] = 0
+    df['heavy_atom_num'] = 0
+    df['carbon_atom_num'] = 0
+    df['oxygen_atom_num'] = 0
+
+    ROO = Group().from_adjacency_list(
+    """
+    1  O u1 p2 c0 {2,S}
+    2  O u0 p2 c0 {1,S} {3,S}
+    3  R!H u0 p0 c0 {2,S}
+    """)
+
+    aQOO = Group().from_adjacency_list(
+    """
+    1  O u0 p2 c0 {2,S}
+    2  O u0 p2 c0 {1,S} {3,S}
+    3  R!H u1 p0 c0 {2,S}
+    """)
+
+    allyl = Group().from_adjacency_list(
+    """
+    1  R!H u1 {2,S}
+    2  R!H u0 {1,S} {3,[D,T]}
+    3  R!H u0 {2,[D,T]}
+    """)
+
+    alkenyl = Group().from_adjacency_list(
+    """
+    1  R!H u1 {2,[D,T,B]}
+    2  R!H u0 {1,[D,T,B]}
+    """)
+
+    birad_1_2 = Group().from_adjacency_list(
+    """
+    1  R!H u1 {2,[S,D,T,B]}
+    2  R!H u1 {1,[S,D,T,B]}
+    """)
+
+    for label, spc in spc_dict.items():
+        if generate_thermo:
+            src_comment = spc.thermo.comment
+            if 'library' in src_comment and '+' not in src_comment:
+                 df.loc[label, 'source'] = 'lib'
+            elif 'library' in src_comment:
+                df.loc[label, 'source'] = 'hbi'
+            df.loc[label, ['dG_700', 'dG_1000', 'dG_1500', 'dG_2000']] = \
+                [spc.thermo.get_free_energy(T) / 1000 / 4.184 for T in [700, 1000, 1500, 2000]] # kcal/mol
+        for key, value in spc.molecule[0].get_element_count().items():
+            if key != 'H':
+                df.loc[label, 'heavy_atom_num'] += value
+            if key == 'C':
+                df.loc[label, 'carbon_atom_num'] = value
+            if key == 'O':
+                df.loc[label, 'oxygen_atom_num'] = value
+
+        df.loc[label, 'mult'] = spc.multiplicity
+        df.loc[label, 'singlet_carbene'] = spc.molecule[0].get_singlet_carbene_count() > 0
+        df.loc[label, 'radical_count'] = spc.molecule[0].get_radical_count()
+
+        for i in ['ROO', 'aQOO', 'allyl', 'alkenyl', 'birad_1_2']:
+            for m in spc.molecule:
+                if m.is_subgraph_isomorphic(locals()[i]):
+                    df.loc[label, i] = True
+                    break
+            else:
+                df.loc[label, i] = False
+
+        df.loc[label, 'cycle_number'] = len(spc.molecule[0].get_deterministic_sssr())
+        df.loc[label, 'polycyclic'] = len(spc.molecule[0].get_polycycles()) > 0
+    return df
