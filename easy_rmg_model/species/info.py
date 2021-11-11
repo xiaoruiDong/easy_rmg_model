@@ -50,9 +50,10 @@ except:
     import pybel
 
 
-def find_all_species_from_calcs_path(calc_path):
+def species_from_calcs_path(calc_path):
     """
-    A function used to find all species in the calcs folder.
+    A function used to find all species in the "calcs" folder. The "calcs"
+    folder is one of the folder under an ARC calculation project.
     """
     spc_info = {}
     species_path = os.path.join(calc_path, 'Species')
@@ -63,8 +64,22 @@ def find_all_species_from_calcs_path(calc_path):
                 {spc_label: {'label': spc_label, 'directory': path, 'ts': False}})
     return spc_info
 
+def tss_from_calcs_path(calc_path):
+    """
+    A function used to find all Transition States (TSs) in the calcs folder. The "calcs"
+    folder is one of the folder under an ARC calculation project.
+    """
+    spc_info = {}
+    species_path = os.path.join(calc_path, 'TS')
+    for spc_label in os.listdir(species_path):
+        path = os.path.join(species_path, spc_label)
+        if os.path.isdir(path):
+            spc_info.update(
+                {spc_label: {'label': spc_label, 'directory': path, 'ts': True}})
+    return spc_info
 
-def find_all_species_from_database(db_path):
+
+def species_from_database(db_path):
     """
     A function used to find all species in the calcs folder.
     """
@@ -76,7 +91,7 @@ def find_all_species_from_database(db_path):
     return spc_info
 
 
-def find_all_species_in_arc_project(project_path):
+def species_in_arc_project(project_path):
     """
     A function used to find all species in the project.
     """
@@ -85,7 +100,7 @@ def find_all_species_in_arc_project(project_path):
 
     spc_info = dict()
     spc_info.update(parse_species_in_arc_input(input_path))
-    calc_spc_info = find_all_species_from_calcs_path(calc_path)
+    calc_spc_info = species_from_calcs_path(calc_path)
 
     for spc, info in spc_info.items():
         info.update(calc_spc_info[spc])
