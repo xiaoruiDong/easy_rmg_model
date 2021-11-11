@@ -87,7 +87,7 @@ def compare_thermo(entry_list: Union[list, tuple],
 
     rel_err = np.zeros_like(value)
     err = np.zeros_like(value)
-    reference_index = reference_entry if not isinstance(reference_entry, int) else 0
+    reference_index = reference_entry if isinstance(reference_entry, int) else 0
     for i in range(value.shape[0]):
         err[i, :] = value[i, :] - value[reference_index, :]
         rel_err[i, :] = err[i, :] * 2 / abs(value[i, :] + value[reference_index, :]) * 100
