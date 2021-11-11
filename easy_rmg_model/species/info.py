@@ -93,7 +93,7 @@ def find_all_species_in_arc_project(project_path):
 
 
 def classify_jobs(spc,
-                  job_types=['composite', 'scan', 'freq'],
+                  job_types=['composite', 'scan', 'freq', 'irc', 'opt'],
                   output_file_name='output.out'):
     """
     A function used to classify all of the jobs under the species calculation
@@ -102,7 +102,7 @@ def classify_jobs(spc,
     """
 
     if 'directory' not in spc:
-        return
+        raise RuntimeError('Encounter a species without any file location information.')
 
     new_info = {job_type: [] for job_type in job_types}
 
