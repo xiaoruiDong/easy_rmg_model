@@ -17,6 +17,7 @@ from arc.species.conformers import find_internal_rotors
 from arc.species.converter import xyz_to_xyz_file_format
 from arc.parser import parse_xyz_from_file
 
+from rdmc.external.rmg import from_rdkit_mol
 
 def xyz_to_mol(xyz):
     if isinstance(xyz, dict):
@@ -38,11 +39,30 @@ def xyz_to_mol(xyz):
 
 
 def xyz_to_rotors_dict(xyz):
+    # Does not work for generate resonance structure
+    # Atom index will change
     try:
         mol = xyz_to_mol(xyz)
-        return find_internal_rotors(mol)
-    except:
+    except ValueError:
         return
+    # spc.molecule = [mol]
+    # spc.generate_resonance_structures()
+    # for mol in spc.molecule:
+    #     new_rotors_dict = find_internal_rotors(mol)
+    #     try:
+    #         old_rotors_dict = [rotor for rotor in new_rotors_dict
+    #                            if rotor in old_rotors_dict]
+    #     except NameError:
+    #         old_rotors_dict = new_rotors_dict
+    old_rotors_dict = find_internal_rotors(mol)
+    return {ind: rotor for ind, rotor in enumerate(old_rotors_dict)}
+
+
+def rdmol_to_rotors_dict(rdmol):
+
+    mol = from_rdkit_mol(rdmol)
+    old_rotors_dict = find_internal_rotors(mol)
+    return {ind: rotor for ind, rotor in enumerate(old_rotors_dict)}
 
 
 def xyz_to_xyz_file(spc, filename='xyz.txt'):
