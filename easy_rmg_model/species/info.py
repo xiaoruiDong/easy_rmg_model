@@ -278,6 +278,7 @@ def filter_scans(spc, scan_filter='latest'):
 
     for rotor_dict in spc['rotors_dict'].values():
         rotor_dict['archived'] = []
+        rotor_dict['scan_path'] = []
 
     for scan_path in spc['scan']:
 
@@ -285,14 +286,16 @@ def filter_scans(spc, scan_filter='latest'):
 
         # Check if the scan is finished and its initial geom is consistent
         # with the basis xyz
-        if done:
-            try:
-                init_xyz = parse_trajectory(scan_path)[0]
-            except:
-                continue
-            else:
-                if not compare_confs(init_xyz, spc['geom']):
-                    continue
+        if not done:
+            continue
+        try:
+            init_xyz = parse_trajectory(scan_path)[0]
+        except Exception as e:
+            print(e)
+            continue
+
+        if not compare_confs(init_xyz, spc['geom']):
+            continue
 
         # Parse the scan arguments
         try:
@@ -329,49 +332,59 @@ def check_scan_quality(spc):
     """
 
     for rotor in spc['rotors_dict'].values():
+        if not rotor['scan_path']:
+            rotor['scan_path'] = ''
+            rotor['success'] = False
+            rotor['invalidation_reason'] = 'Unknown'
+            continue
+
+        good = []
 
         path = rotor['scan_path']
         if path:
             scan_args = parse_scan_args(path)
             energies, _ = parse_1d_scan_energies(path)
             invalid, reason, _, actions = scan_quality_check(spc['label'], pivots=rotor['scan'][1:-1],
-                                                             energies=energies, scan_res=scan_args['step_size'],
-                                                             log_file=path)
-        else:
+                                                                energies=energies, scan_res=scan_args['step_size'],
+                                                                log_file=path)
+
+            if not invalid or 'barrier' in reason:
+                good.append((len(scan_args['freeze']), path))
+                rotor['success'] = True
+                rotor['symmetry'] = determine_rotor_symmetry(label=spc['label'],
+                                                            pivots=rotor['scan'][1:3],
+                                                            energies=energies)[0]
+
+            elif 'change conformer' in actions:
+                print(
+                    spc['label'] + ': has a bad conformer orientation according to ' + str(rotor['scan']))
+                xyz = xyz_to_xyz_file_format(actions['change conformer'])
+                rotor['success'] = False
+                spc['change conformer'] = xyz
+                break
+
+            else:
+                continue
+
+        if not good:
+            rotor['scan_path'] = path
             rotor['success'] = False
             rotor['invalidation_reason'] = 'Unknown'
-            continue
-
-        if not invalid:
-            rotor['success'] = True
-            rotor['symmetry'] = determine_rotor_symmetry(label=spc['label'],
-                                                         pivots=rotor['scan'][1:3],
-                                                         energies=energies)[0]
-            continue
-
-        if 'change conformer' in actions:
-            print(
-                spc['label'] + ': has a bad conformer orientation according to ' + str(rotor['scan']))
-            xyz = xyz_to_xyz_file_format(actions['change conformer'])
-            return {'label': spc['label'], 'change conformer': xyz}
-
-        if 'barrier' in reason:
-            rotor['success'] = False
-            rotor['invalidation_reason'] = reason
-            continue
-
-        # Otherwise need to come up with troubleshooting methods
-        species_scan_lists = [rotor['scan']]
-        scan_trsh, scan_res = trsh_scan_job(spc['label'],
-                                            scan_args['step_size'],
-                                            rotor['scan'],
-                                            species_scan_lists,
-                                            actions,
-                                            path)
-        rotor['trsh_methods'] = [
-            {'scan_trsh': scan_trsh, 'scan_res': scan_res}]
-        rotor['archived'].append(rotor['scan_path'])
-        spc['scan'].remove(rotor['scan_path'])
+        else:
+            good = sorted(good, key=lambda x: x[0])
+            rotor['scan_path'] = good[0][1]
+            # # Otherwise need to come up with troubleshooting methods
+            # species_scan_lists = [rotor['scan']]
+            # scan_trsh, scan_res = trsh_scan_job(spc['label'],
+            #                                     scan_args['step_size'],
+            #                                     rotor['scan'],
+            #                                     species_scan_lists,
+            #                                     actions,
+            #                                     path)
+            # rotor['trsh_methods'] = [
+            #     {'scan_trsh': scan_trsh, 'scan_res': scan_res}]
+            # rotor['archived'].append(rotor['scan_path'])
+            # spc['scan'].remove(rotor['scan_path'])
 
     return spc
 
@@ -396,28 +409,6 @@ def generate_summary(spc):
     spc['summary'] = summary
     spc['success'] = False if 'failed' in summary else True
     return summary
-
-
-def generate_geom_info(spc, xyz_file=None):
-    if not 'geom' in spc:
-        xyz_file = xyz_file or os.path.join(spc['directory'], 'xyz.txt')
-        try:
-            spc['geom'] = parse_xyz_from_file(xyz_file)
-        except:
-            return
-    try:
-        mol = xyz_to_mol(spc['geom'])
-    except:
-        return
-
-    spc['smiles'] = mol.to_smiles()
-    spc['mol'] = mol.to_adjacency_list()
-    spc['bond_dict'] = enumerate_bonds(mol)
-    spc['atom_dict'] = mol.get_element_count()
-    spc['linear'] = is_linear(coordinates=np.array(spc['geom']['coords']))
-    spc['external_symmetry'], spc['optical_isomers'] = determine_symmetry(
-        spc['geom'])
-    return spc
 
 
 def generate_arkane_input(spc,
